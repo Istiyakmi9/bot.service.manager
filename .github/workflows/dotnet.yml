@@ -37,4 +37,4 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         push: true
-        tags: istiyaqmi9/onlinedatabuilder:latest
+        tags: istiyaqmi9/service-manager:latest
