@@ -9,10 +9,10 @@ namespace Core.Pipeline.Service
         public async Task<FolderDiscovery> GetFolderDetailService(string targetDirectory)
         {
             if (string.IsNullOrEmpty(targetDirectory))
-                targetDirectory = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "workspace"));
+                targetDirectory = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "workspace"));
 
             if (!Directory.Exists(targetDirectory))
-                throw new Exception("Invalid directory");
+                Directory.CreateDirectory(targetDirectory);
 
             var result = GetAllFilesInDirectory(targetDirectory);
             result.RootDirectory = Directory.GetCurrentDirectory();

@@ -1,6 +1,5 @@
 using Core.Pipeline.IService;
 using Core.Pipeline.Service;
-using Microsoft.AspNetCore.Cors.Infrastructure;
 using Newtonsoft.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,6 +25,11 @@ builder.Services.AddCors(options =>
     });
 });
 builder.Services.AddScoped<IFolderDiscoveryService, FolderDiscoveryService>();
+
+var targetDirectory = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "k8-workspace"));
+
+if (!Directory.Exists(targetDirectory))
+    Directory.CreateDirectory(targetDirectory);
 
 var app = builder.Build();
 
