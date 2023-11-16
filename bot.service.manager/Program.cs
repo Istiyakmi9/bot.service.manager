@@ -37,7 +37,11 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(option =>
+    {
+        option.SwaggerEndpoint("/swagger/v1/swagger.json", "K8Service Manager API");
+        option.RoutePrefix = "api";
+    });
 }
 app.UseCors();
 app.UseAuthorization();
