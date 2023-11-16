@@ -17,20 +17,17 @@ namespace bot.service.manager.Service
         {
             string arguments = string.Empty;
 
-            // Set the path to microk8s kubectl executable
-            string microk8sKubectlPath = "/snap/bin/microk8s.kubectl"; // Adjust the path based on your setup
-            
             if (string.IsNullOrEmpty(kubectlModel.Command))
             {
-                kubectlModel.Command = "get pods all --all-namespaces";
+                kubectlModel.Command = "microk8s.kubectl get pods all --all-namespaces";
             }
 
 
             // Create process start info
             var startInfo = new ProcessStartInfo
             {
-                FileName = microk8sKubectlPath,
-                Arguments = arguments,
+                FileName = "sh",
+                Arguments = "-c microk8s.kubectl get pods all --all-namespaces",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
