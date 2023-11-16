@@ -1,4 +1,4 @@
-﻿namespace Core.Pipeline.Model
+﻿namespace bot.service.manager.Model
 {
     public class FolderDiscovery
     {

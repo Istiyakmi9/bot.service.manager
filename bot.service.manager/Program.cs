@@ -1,5 +1,5 @@
-using Core.Pipeline.IService;
-using Core.Pipeline.Service;
+using bot.service.manager.IService;
+using bot.service.manager.Service;
 using Newtonsoft.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,7 +25,7 @@ builder.Services.AddCors(options =>
     });
 });
 builder.Services.AddScoped<IFolderDiscoveryService, FolderDiscoveryService>();
-
+builder.Services.AddScoped<IActionService, ActionService>();
 var targetDirectory = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "k8-workspace"));
 
 if (!Directory.Exists(targetDirectory))
