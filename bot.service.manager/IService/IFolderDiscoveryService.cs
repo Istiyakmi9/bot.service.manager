@@ -1,6 +1,7 @@
-﻿using Core.Pipeline.Model;
+﻿
+using bot.service.manager.Model;
 
-namespace Core.Pipeline.IService
+namespace bot.service.manager.IService
 {
     public interface IFolderDiscoveryService
     {
