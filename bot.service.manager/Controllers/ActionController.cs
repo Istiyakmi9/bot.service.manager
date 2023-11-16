@@ -37,9 +37,9 @@ namespace bot.service.manager.Controllers
         }
 
         [HttpPost("CheckStatus")]
-        public async Task<string> CheckStatus([FromBody] FileDetail fileDetail)
+        public async Task<string> CheckStatus([FromBody] KubectlModel kubectlModel)
         {
-            var result = await _actionService.CheckStatusService(fileDetail);
+            var result = await _actionService.CheckStatusService(kubectlModel);
             return result;
         }
     }

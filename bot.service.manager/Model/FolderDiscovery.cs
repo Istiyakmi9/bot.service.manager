@@ -14,4 +14,9 @@
         public string FolderName { get; set; }
         public string FileName { get; set; }
     }
+
+    public class KubectlModel
+    {
+        public string Command { get; set; }
+    }
 }

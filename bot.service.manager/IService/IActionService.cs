@@ -7,6 +7,6 @@ namespace bot.service.manager.IService
         Task<string> RunFileService(FileDetail fileDetail);
         Task<string> ReRunFileService(FileDetail fileDetail);
         Task<string> StopFileService(FileDetail fileDetail);
-        Task<string> CheckStatusService(FileDetail fileDetail);
+        Task<string> CheckStatusService(KubectlModel kubectlModel);
     }
 }
