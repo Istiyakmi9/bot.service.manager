@@ -9,7 +9,7 @@ namespace Core.Pipeline.Service
         public async Task<FolderDiscovery> GetFolderDetailService(string targetDirectory)
         {
             if (string.IsNullOrEmpty(targetDirectory))
-                targetDirectory = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "workspace"));
+                targetDirectory = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "k8-workspace"));
 
             if (!Directory.Exists(targetDirectory))
                 Directory.CreateDirectory(targetDirectory);
