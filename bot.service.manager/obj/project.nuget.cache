@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "1a7tpUofCw65tM2MH6mk6XcCWKvle6+YhcozS8TzX2/qPBuZJVwYffO50R+X8AKD/66q7dz2tU5xLSkW0+87Hw==",
+  "dgSpecHash": "qCNXRULuy/OLy9Hjzuni4pRfc1P6e3okZKe8CvUoP8YTXj7jX9Q5XJ7t2bC/2XQM53JQlfR/vR8xSoj/mLiZuQ==",
   "success": true,
   "projectFilePath": "D:\\ws\\ServiceManager\\bot.service.manager\\bot.service.manager\\bot.service.manager.csproj",
   "expectedPackageFiles": [
@@ -9,6 +9,7 @@
     "C:\\Users\\USER\\.nuget\\packages\\microsoft.csharp\\4.7.0\\microsoft.csharp.4.7.0.nupkg.sha512",
     "C:\\Users\\USER\\.nuget\\packages\\microsoft.extensions.apidescription.server\\3.0.0\\microsoft.extensions.apidescription.server.3.0.0.nupkg.sha512",
     "C:\\Users\\USER\\.nuget\\packages\\microsoft.openapi\\1.2.3\\microsoft.openapi.1.2.3.nupkg.sha512",
+    "C:\\Users\\USER\\.nuget\\packages\\microsoft.visualstudio.azure.containers.tools.targets\\1.17.2\\microsoft.visualstudio.azure.containers.tools.targets.1.17.2.nupkg.sha512",
     "C:\\Users\\USER\\.nuget\\packages\\newtonsoft.json\\13.0.1\\newtonsoft.json.13.0.1.nupkg.sha512",
     "C:\\Users\\USER\\.nuget\\packages\\newtonsoft.json.bson\\1.0.2\\newtonsoft.json.bson.1.0.2.nupkg.sha512",
     "C:\\Users\\USER\\.nuget\\packages\\swashbuckle.aspnetcore\\6.2.3\\swashbuckle.aspnetcore.6.2.3.nupkg.sha512",
