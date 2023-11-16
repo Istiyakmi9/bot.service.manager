@@ -1,5 +1,5 @@
-﻿using Core.Pipeline.IService;
-using Core.Pipeline.Model;
+﻿using bot.service.manager.IService;
+using bot.service.manager.Model;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Core.Pipeline.Controllers
