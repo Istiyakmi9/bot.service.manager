@@ -6,6 +6,13 @@ namespace bot.service.manager.Service
 {
     public class FolderDiscoveryService : IFolderDiscoveryService
     {
+        ILogger<FolderDiscoveryService> _logger;
+
+        public FolderDiscoveryService(ILogger<FolderDiscoveryService> logger)
+        {
+            _logger = logger;
+        }
+
         public async Task<FolderDiscovery> GetFolderDetailService(string targetDirectory)
         {
             if (string.IsNullOrEmpty(targetDirectory))
@@ -50,11 +57,13 @@ namespace bot.service.manager.Service
         {
             string result = string.Empty;
             string cmdPrefix = string.Empty;
-            string arguments = $"-c \"{kubectlModel.Command}\"";
+            string arguments = kubectlModel.Command;
+
             if (kubectlModel.isMicroK8)
             {
-                cmdPrefix = "/snap/bin/microk8.kubectl ";
-            } else
+                cmdPrefix = "/snap/bin/microk8s.kubectl";
+            }
+            else
             {
                 if (kubectlModel.isWindow)
                 {
@@ -62,39 +71,55 @@ namespace bot.service.manager.Service
                     arguments = "/c " + kubectlModel.Command;
                 }
                 else
-                    cmdPrefix = "/bin/bash";
-            }
-            // Create a new process start info
-            ProcessStartInfo psi = new ProcessStartInfo
-            {
-                FileName = cmdPrefix, // Specify the command prompt, "/bin/bash" Specify the bash shell for Linux
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                Arguments = arguments  // /c tells cmd.exe to terminate after the command is complete ---- $"-c \"{command}\"" -c tells bash to execute the command for Linux
-            };
-
-            // Create a new process and assign the start info
-            using (Process process = new Process { StartInfo = psi })
-            {
-                // Start the process
-                process.Start();
-
-                // Read the output and error streams
-                result = process.StandardOutput.ReadToEnd();
-                if (string.IsNullOrEmpty(result))
                 {
-                    string error = process.StandardError.ReadToEnd();
-                    Console.WriteLine("Error:\n" + error);
-                    throw new Exception(error);
+                    cmdPrefix = "/bin/bash";
                 }
-
-                // Wait for the process to exit
-                process.WaitForExit();
             }
 
+            _logger.LogInformation($"[CMD]: {kubectlModel.Command}");
+            try
+            {
+                // Create a new process start info
+                ProcessStartInfo psi = new ProcessStartInfo
+                {
+                    FileName = cmdPrefix, // Specify the command prompt, "/bin/bash" Specify the bash shell for Linux
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    Arguments = arguments  // /c tells cmd.exe to terminate after the command is complete ---- $"-c \"{command}\"" -c tells bash to execute the command for Linux
+                };
+
+                // Create a new process and assign the start info
+                using (Process process = new Process { StartInfo = psi })
+                {
+                    // Start the process
+                    _logger.LogInformation($"[INFO]: Starting command execution");
+                    process.Start();
+
+                    // Read the output and error streams
+                    result = process.StandardOutput.ReadToEnd();
+                    _logger.LogInformation($"[RESULT]: {result}");
+                    if (string.IsNullOrEmpty(result))
+                    {
+                        string error = process.StandardError.ReadToEnd();
+                        Console.WriteLine("Error:\n" + error);
+                        throw new Exception(error);
+                    }
+
+                    // Wait for the process to exit
+                    process.WaitForExit();
+
+                    _logger.LogInformation($"[INFO]: Command execution completed");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"[ERROR]: {ex.Message}");
+            }
+
+            _logger.LogInformation($"[RESULT] Final: {result}");
             return await Task.FromResult(result);
         }
     }
