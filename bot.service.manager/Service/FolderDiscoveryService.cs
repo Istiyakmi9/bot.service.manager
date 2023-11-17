@@ -38,7 +38,11 @@ namespace bot.service.manager.Service
                 }
             }
             folderDiscovery.FolderPath = targetDirectory;
-            folderDiscovery.FolderName = targetDirectory.Split(@"\").Last();
+            if (folderDiscovery.FolderPath.Contains(@"\"))
+                folderDiscovery.FolderName = targetDirectory.Split(@"\").Last();
+            else
+                folderDiscovery.FolderName = targetDirectory.Split(@"/").Last();
+
             return folderDiscovery;
         }
 
