@@ -16,7 +16,6 @@ namespace bot.service.manager.Service
 
             var result = GetAllFilesInDirectory(targetDirectory);
             result.RootDirectory = Directory.GetCurrentDirectory();
-
             return await Task.FromResult(result);
         }
 
@@ -35,14 +34,25 @@ namespace bot.service.manager.Service
                     folderDiscovery.Files.Add(new FileDetail
                     {
                         FullPath = fileName,
-                        FileName = fileName.Substring(fileName.LastIndexOf(@"\") + 1),
-                        FolderName = targetDirectory
+                        FileName = fileName.Substring(fileName.LastIndexOf(@"\") + 1)
                     });
                 }
                 list.Add(fileName);
             }
-            folderDiscovery.Folders = Directory.GetDirectories(targetDirectory).ToList();
-
+            //var folders = Directory.GetDirectories(targetDirectory).ToList();
+            //if (folders != null && folders.Count > 0)
+            //{
+            //    folderDiscovery.Folders = new List<FolderDetail>();
+            //    folders.ForEach(x =>
+            //    {
+            //        folderDiscovery.Folders.Add(new FolderDetail
+            //        {
+            //            FullPath = x,
+            //            FolderName = x.Substring(x.LastIndexOf(@"\") + 1),
+            //        });
+            //    });
+            //}
+            folderDiscovery.FolderName = targetDirectory.Substring(targetDirectory.LastIndexOf(@"\") + 1);
             return folderDiscovery;
         }
 
