@@ -16,31 +16,31 @@ namespace bot.service.manager.Controllers
         }
 
         [HttpPost("RunFile")]
-        public async Task<string> RunFile([FromBody] FileDetail fileDetail)
+        public async Task<ApiResponse> RunFile([FromBody] FileDetail fileDetail)
         {
             var result = await _actionService.RunFileService(fileDetail);
-            return result;
+            return ApiResponse.BuildResponse(result);
         }
 
         [HttpPost("ReRunFile")]
-        public async Task<string> ReRunFile([FromBody] FileDetail fileDetail)
+        public async Task<ApiResponse> ReRunFile([FromBody] FileDetail fileDetail)
         {
             var result = await _actionService.ReRunFileService(fileDetail);
-            return result;
+            return ApiResponse.BuildResponse(result);
         }
 
         [HttpPost("StopFile")]
-        public async Task<string> StopFile([FromBody] FileDetail fileDetail)
+        public async Task<ApiResponse> StopFile([FromBody] FileDetail fileDetail)
         {
             var result = await _actionService.StopFileService(fileDetail);
-            return result;
+            return ApiResponse.BuildResponse(result);
         }
 
         [HttpPost("CheckStatus")]
-        public async Task<string> CheckStatus([FromBody] KubectlModel kubectlModel)
+        public async Task<ApiResponse> CheckStatus([FromBody] KubectlModel kubectlModel)
         {
             var result = await _actionService.CheckStatusService(kubectlModel);
-            return result;
+            return ApiResponse.BuildResponse(result);
         }
     }
 }

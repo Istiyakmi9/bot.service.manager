@@ -2,21 +2,30 @@
 {
     public class FolderDiscovery
     {
-        public List<string>? Folders { get; set; }
+        //public List<FolderDetail>? Folders { get; set; }
         public List<FileDetail>? Files { get; set; }
         public string? TargetDirectory { get; set; }
         public string? RootDirectory { get; set; }
+        public string? FolderPath { get; set; }
+        public string? FolderName { get; set; }
     }
 
     public class FileDetail
     {
         public string FullPath { get; set; }
-        public string FolderName { get; set; }
         public string FileName { get; set; }
+    }
+
+    public class FolderDetail
+    {
+        public string FullPath { get; set; }
+        public string FolderName { get; set; }
     }
 
     public class KubectlModel
     {
         public string Command { get; set; }
+        public bool isWindow { get; set; } = false;
+        public bool isMicroK8 { get; set; } = false;
     }
 }

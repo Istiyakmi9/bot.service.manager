@@ -16,7 +16,6 @@ namespace bot.service.manager.Service
 
             var result = GetAllFilesInDirectory(targetDirectory);
             result.RootDirectory = Directory.GetCurrentDirectory();
-
             return await Task.FromResult(result);
         }
 
@@ -24,7 +23,6 @@ namespace bot.service.manager.Service
         {
             FolderDiscovery folderDiscovery = new FolderDiscovery();
             folderDiscovery.Files = new List<FileDetail>();
-            var list = new List<string>();
             string[] fileEntries = Directory.GetFiles(targetDirectory);
 
             foreach (string fileName in fileEntries)
@@ -35,33 +33,47 @@ namespace bot.service.manager.Service
                     folderDiscovery.Files.Add(new FileDetail
                     {
                         FullPath = fileName,
-                        FileName = fileName.Substring(fileName.LastIndexOf(@"\") + 1),
-                        FolderName = targetDirectory
+                        FileName = fileName.Substring(fileName.LastIndexOf(@"\") + 1)
                     });
                 }
-                list.Add(fileName);
             }
-            folderDiscovery.Folders = Directory.GetDirectories(targetDirectory).ToList();
+            folderDiscovery.FolderPath = targetDirectory;
+            if (folderDiscovery.FolderPath.Contains(@"\"))
+                folderDiscovery.FolderName = targetDirectory.Split(@"\").Last();
+            else
+                folderDiscovery.FolderName = targetDirectory.Split(@"/").Last();
 
             return folderDiscovery;
         }
 
-        public async Task<string> RunCommandService()
+        public async Task<string> RunCommandService(KubectlModel kubectlModel)
         {
             string result = string.Empty;
-            // Specify the command to run
-            string command = "dir"; // Replace this with your desired command
-
+            string cmdPrefix = string.Empty;
+            string arguments = $"-c \"{kubectlModel.Command}\"";
+            if (kubectlModel.isMicroK8)
+            {
+                cmdPrefix = "/snap/bin/microk8.kubectl ";
+            } else
+            {
+                if (kubectlModel.isWindow)
+                {
+                    cmdPrefix = "cmd.exe";
+                    arguments = "/c " + kubectlModel.Command;
+                }
+                else
+                    cmdPrefix = "/bin/bash";
+            }
             // Create a new process start info
             ProcessStartInfo psi = new ProcessStartInfo
             {
-                FileName = "cmd.exe", // Specify the command prompt, "/bin/bash" Specify the bash shell for Linux
+                FileName = cmdPrefix, // Specify the command prompt, "/bin/bash" Specify the bash shell for Linux
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
-                Arguments = "/c " + command // /c tells cmd.exe to terminate after the command is complete ---- $"-c \"{command}\"" -c tells bash to execute the command for Linux
+                Arguments = arguments  // /c tells cmd.exe to terminate after the command is complete ---- $"-c \"{command}\"" -c tells bash to execute the command for Linux
             };
 
             // Create a new process and assign the start info

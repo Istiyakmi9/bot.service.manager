@@ -16,18 +16,18 @@ namespace Core.Pipeline.Controllers
         }
 
         [HttpPost("GetFolder")]
-        public async Task<FolderDiscovery> GetFolderDetail([FromBody] FolderDiscovery folderDiscovery)
+        public async Task<ApiResponse> GetFolderDetail([FromBody] FolderDiscovery folderDiscovery)
         {
             var result = await _folderDiscoveryService.GetFolderDetailService(folderDiscovery.TargetDirectory);
-            return result;
+            return ApiResponse.BuildResponse(result);
         }
 
-        [HttpGet("RunCommand")]
-        public async Task<string> RunCommand()
+        [HttpPost("RunCommand")]
+        public async Task<ApiResponse> RunCommand(KubectlModel kubectlModel)
         {
-            var result = await _folderDiscoveryService.RunCommandService();
-            return result;
+            var result = await _folderDiscoveryService.RunCommandService(kubectlModel);
+            return ApiResponse.BuildResponse(result);
         }
-
+       
     }
 }

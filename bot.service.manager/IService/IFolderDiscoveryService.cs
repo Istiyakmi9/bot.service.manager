@@ -6,6 +6,6 @@ namespace bot.service.manager.IService
     public interface IFolderDiscoveryService
     {
         Task<FolderDiscovery> GetFolderDetailService(string targetDirectory);
-        Task<string> RunCommandService();
+        Task<string> RunCommandService(KubectlModel kubectlModel);
     }
 }
