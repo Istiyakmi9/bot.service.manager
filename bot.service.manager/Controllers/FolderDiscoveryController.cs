@@ -22,12 +22,12 @@ namespace Core.Pipeline.Controllers
             return ApiResponse.BuildResponse(result);
         }
 
-        [HttpGet("RunCommand")]
-        public async Task<ApiResponse> RunCommand()
+        [HttpPost("RunCommand")]
+        public async Task<ApiResponse> RunCommand(KubectlModel kubectlModel)
         {
-            var result = await _folderDiscoveryService.RunCommandService();
+            var result = await _folderDiscoveryService.RunCommandService(kubectlModel);
             return ApiResponse.BuildResponse(result);
         }
-
+       
     }
 }
