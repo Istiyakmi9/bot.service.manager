@@ -1,6 +1,5 @@
 ﻿using bot.service.manager.IService;
 using bot.service.manager.Model;
-using System.Diagnostics;
 
 namespace bot.service.manager.Service
 {
@@ -25,15 +24,21 @@ namespace bot.service.manager.Service
             folderDiscovery.Files = new List<FileDetail>();
             string[] fileEntries = Directory.GetFiles(targetDirectory);
 
-            foreach (string fileName in fileEntries)
+            foreach (string filePath in fileEntries)
             {
-                string extension = Path.GetExtension(fileName);
+                string extension = Path.GetExtension(filePath);
                 if (extension.Equals(".yml") || extension.Equals(".yaml"))
                 {
+                    string fileName = "";
+                    if (filePath.Contains(@"\"))
+                        fileName = filePath.Split(@"\").Last();
+                    else
+                        fileName = filePath.Split(@"/").Last();
+
                     folderDiscovery.Files.Add(new FileDetail
                     {
-                        FullPath = fileName,
-                        FileName = fileName.Substring(fileName.LastIndexOf(@"\") + 1)
+                        FullPath = filePath,
+                        FileName = fileName
                     });
                 }
             }

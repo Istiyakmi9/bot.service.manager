@@ -25,8 +25,7 @@
     public class KubectlModel
     {
         public string Command { get; set; }
-        public bool isWindow { get; set; } = false;
-        public bool isMicroK8 { get; set; } = false;
-        public string FilePath { get; set; }
+        public bool IsWindow { get; set; } = false;
+        public bool IsMicroK8 { get; set; } = false;
     }
 }

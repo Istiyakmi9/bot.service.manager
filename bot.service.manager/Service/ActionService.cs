@@ -4,8 +4,15 @@ using System.Diagnostics;
 
 namespace bot.service.manager.Service
 {
-    public class ActionService: IActionService
+    public class ActionService : IActionService
     {
+        ILogger<ActionService> _logger;
+
+        public ActionService(ILogger<ActionService> logger)
+        {
+            _logger = logger;
+        }
+
         public async Task<string> CheckStatusService(KubectlModel kubectlModel)
         {
             string result = RunMicrok8sKubectlCommand(kubectlModel);
@@ -19,37 +26,50 @@ namespace bot.service.manager.Service
 
             // Set the path to microk8s kubectl executable
             string microk8sKubectlPath = "/snap/bin/microk8s.kubectl"; // Adjust the path based on your setup
-            
-            if (string.IsNullOrEmpty(kubectlModel.Command))
+
+            kubectlModel.Command = "microk8s.kubectl get pods all --all-namespaces";
+
+            _logger.LogInformation($"[CMD]: {kubectlModel.Command}");
+
+            string result = string.Empty;
+
+            try
             {
-                kubectlModel.Command = "get pods all --all-namespaces";
+                // Create process start info
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = microk8sKubectlPath,
+                    Arguments = kubectlModel.Command,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                _logger.LogInformation($"[INFO]: {kubectlModel.Command}");
+                // Start the process
+                using (Process process = new Process { StartInfo = startInfo })
+                {
+                    _logger.LogInformation($"[INFO]: Starting command execution");
+                    process.Start();
+
+                    // Capture the standard output
+                    result = process.StandardOutput.ReadToEnd();
+                    _logger.LogInformation($"[RESULT]: {result}");
+
+                    // Wait for the process to exit
+                    process.WaitForExit();
+
+                    _logger.LogInformation($"[INFO]: Command execution completed");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"[ERROR]: {ex.Message}");
             }
 
-
-            // Create process start info
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = microk8sKubectlPath,
-                Arguments = arguments,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            // Start the process
-            using (Process process = new Process { StartInfo = startInfo })
-            {
-                process.Start();
-
-                // Capture the standard output
-                string result = process.StandardOutput.ReadToEnd();
-
-                // Wait for the process to exit
-                process.WaitForExit();
-
-                return result;
-            }
+            _logger.LogInformation($"[RESULT] Final: {result}");
+            return result;
         }
 
         public async Task<string> ReRunFileService(FileDetail fileDetail)
@@ -59,12 +79,32 @@ namespace bot.service.manager.Service
 
         public async Task<string> RunFileService(FileDetail fileDetail)
         {
-            return await Task.FromResult("Successfull");
+            if (string.IsNullOrEmpty(fileDetail.FullPath))
+                throw new Exception("Invalid file path");
+
+            KubectlModel kubectlModel = new KubectlModel
+            {
+                IsMicroK8 = true,
+                IsWindow = false,
+                Command = $"apply -f {fileDetail.FullPath}"
+            };
+            var result = await CommonService.RunAllCommandService(kubectlModel);
+            return result;
         }
 
         public async Task<string> StopFileService(FileDetail fileDetail)
         {
-            return await Task.FromResult("Successfull");
+            if (string.IsNullOrEmpty(fileDetail.FullPath))
+                throw new Exception("Invalid file path");
+
+            KubectlModel kubectlModel = new KubectlModel
+            {
+                IsMicroK8 = true,
+                IsWindow = false,
+                Command = $"delete -f {fileDetail.FullPath}"
+            };
+            var result = await CommonService.RunAllCommandService(kubectlModel);
+            return result;
         }
     }
 }

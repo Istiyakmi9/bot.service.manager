@@ -9,21 +9,30 @@ namespace bot.service.manager.Service
         {
             string result = string.Empty;
             string cmdPrefix = string.Empty;
-            string arguments = $"-c \"{kubectlModel.Command}\"";
-            if (kubectlModel.isMicroK8)
+            string arguments = kubectlModel.Command;
+            var loggerFactory = new LoggerFactory();
+
+            // Create an ILogger instance
+            var logger = loggerFactory.CreateLogger<CommonService>();
+
+            if (kubectlModel.IsMicroK8)
             {
-                cmdPrefix = "/snap/bin/microk8.kubectl ";
+                cmdPrefix = "/snap/bin/microk8s.kubectl";
             }
             else
             {
-                if (kubectlModel.isWindow)
+                if (kubectlModel.IsWindow)
                 {
                     cmdPrefix = "cmd.exe";
                     arguments = "/c " + kubectlModel.Command;
                 }
                 else
+                {
                     cmdPrefix = "/bin/bash";
+                }
             }
+
+            logger.LogInformation($"[CMD]: {kubectlModel.Command}");
             try
             {
                 // Create a new process start info
@@ -42,10 +51,12 @@ namespace bot.service.manager.Service
                 using (Process process = new Process { StartInfo = psi })
                 {
                     // Start the process
+                    logger.LogInformation($"[INFO]: Starting command execution");
                     process.Start();
 
                     // Read the output and error streams
                     result = process.StandardOutput.ReadToEnd();
+                    logger.LogInformation($"[RESULT]: {result}");
                     if (string.IsNullOrEmpty(result))
                     {
                         string error = process.StandardError.ReadToEnd();
@@ -55,15 +66,17 @@ namespace bot.service.manager.Service
 
                     // Wait for the process to exit
                     process.WaitForExit();
+
+                    logger.LogInformation($"[INFO]: Command execution completed");
                 }
-
-                return await Task.FromResult(result);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                logger.LogError($"[ERROR]: {ex.Message}");
             }
 
+            logger.LogInformation($"[RESULT] Final: {result}");
+            return await Task.FromResult(result);
         }
     }
 }
