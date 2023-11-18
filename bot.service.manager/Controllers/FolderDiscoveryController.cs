@@ -15,10 +15,17 @@ namespace Core.Pipeline.Controllers
             _folderDiscoveryService = folderDiscoveryService;
         }
 
-        [HttpPost("GetFolder")]
-        public async Task<ApiResponse> GetFolderDetail([FromBody] FolderDiscovery folderDiscovery)
+        [HttpPost("GetAllFolder")]
+        public async Task<ApiResponse> GetAllFolder([FromBody] FolderDiscovery folderDiscovery)
         {
             var result = await _folderDiscoveryService.GetFolderDetailService(folderDiscovery.TargetDirectory);
+            return ApiResponse.BuildResponse(result);
+        }
+
+        [HttpPost("GetAllFile")]
+        public async Task<ApiResponse> GetAllFile([FromBody] FolderDiscovery folderDiscovery)
+        {
+            var result = await _folderDiscoveryService.GetAllFileService(folderDiscovery.TargetDirectory);
             return ApiResponse.BuildResponse(result);
         }
 

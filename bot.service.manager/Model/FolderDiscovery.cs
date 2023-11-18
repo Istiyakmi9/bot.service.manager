@@ -2,8 +2,7 @@
 {
     public class FolderDiscovery
     {
-        //public List<FolderDetail>? Folders { get; set; }
-        public List<FileDetail>? Files { get; set; }
+        public List<FolderDetail>? Folders { get; set; }
         public string? TargetDirectory { get; set; }
         public string? RootDirectory { get; set; }
         public string? FolderPath { get; set; }

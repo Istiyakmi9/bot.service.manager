@@ -7,5 +7,6 @@ namespace bot.service.manager.IService
     {
         Task<FolderDiscovery> GetFolderDetailService(string targetDirectory);
         Task<string> RunCommandService(KubectlModel kubectlModel);
+        Task<List<FileDetail>> GetAllFileService(string targetDirectory);
     }
 }
