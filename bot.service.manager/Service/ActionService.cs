@@ -21,7 +21,6 @@ namespace bot.service.manager.Service
             return result;
         }
 
-
         public async Task<string> ReRunFileService(FileDetail fileDetail)
         {
             return await Task.FromResult("Successfull");
@@ -55,6 +54,19 @@ namespace bot.service.manager.Service
             };
             var result = await _commonService.RunAllCommandService(kubectlModel);
             return result;
+        }
+
+        public async Task<string> GetAllRunningService()
+        {
+            var status = "";
+            KubectlModel kubectlModel = new KubectlModel
+            {
+                IsMicroK8 = true,
+                IsWindow = false,
+                Command = "get pods"
+            };
+            var result = await _commonService.RunAllCommandService(kubectlModel);
+            return await Task.FromResult(status);
         }
     }
 }
