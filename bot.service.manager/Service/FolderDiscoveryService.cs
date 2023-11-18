@@ -1,18 +1,10 @@
 ﻿using bot.service.manager.IService;
 using bot.service.manager.Model;
-using System.Diagnostics;
 
 namespace bot.service.manager.Service
 {
     public class FolderDiscoveryService : IFolderDiscoveryService
     {
-        ILogger<FolderDiscoveryService> _logger;
-
-        public FolderDiscoveryService(ILogger<FolderDiscoveryService> logger)
-        {
-            _logger = logger;
-        }
-
         public async Task<FolderDiscovery> GetFolderDetailService(string targetDirectory)
         {
             if (string.IsNullOrEmpty(targetDirectory))
@@ -32,15 +24,21 @@ namespace bot.service.manager.Service
             folderDiscovery.Files = new List<FileDetail>();
             string[] fileEntries = Directory.GetFiles(targetDirectory);
 
-            foreach (string fileName in fileEntries)
+            foreach (string filePath in fileEntries)
             {
-                string extension = Path.GetExtension(fileName);
+                string extension = Path.GetExtension(filePath);
                 if (extension.Equals(".yml") || extension.Equals(".yaml"))
                 {
+                    string fileName = "";
+                    if (filePath.Contains(@"\"))
+                        fileName = filePath.Split(@"\").Last();
+                    else
+                        fileName = filePath.Split(@"/").Last();
+
                     folderDiscovery.Files.Add(new FileDetail
                     {
-                        FullPath = fileName,
-                        FileName = fileName.Substring(fileName.LastIndexOf(@"\") + 1)
+                        FullPath = filePath,
+                        FileName = fileName
                     });
                 }
             }
@@ -55,72 +53,8 @@ namespace bot.service.manager.Service
 
         public async Task<string> RunCommandService(KubectlModel kubectlModel)
         {
-            string result = string.Empty;
-            string cmdPrefix = string.Empty;
-            string arguments = kubectlModel.Command;
-
-            if (kubectlModel.isMicroK8)
-            {
-                cmdPrefix = "/snap/bin/microk8s.kubectl";
-            }
-            else
-            {
-                if (kubectlModel.isWindow)
-                {
-                    cmdPrefix = "cmd.exe";
-                    arguments = "/c " + kubectlModel.Command;
-                }
-                else
-                {
-                    cmdPrefix = "/bin/bash";
-                }
-            }
-
-            _logger.LogInformation($"[CMD]: {kubectlModel.Command}");
-            try
-            {
-                // Create a new process start info
-                ProcessStartInfo psi = new ProcessStartInfo
-                {
-                    FileName = cmdPrefix, // Specify the command prompt, "/bin/bash" Specify the bash shell for Linux
-                    RedirectStandardInput = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    Arguments = arguments  // /c tells cmd.exe to terminate after the command is complete ---- $"-c \"{command}\"" -c tells bash to execute the command for Linux
-                };
-
-                // Create a new process and assign the start info
-                using (Process process = new Process { StartInfo = psi })
-                {
-                    // Start the process
-                    _logger.LogInformation($"[INFO]: Starting command execution");
-                    process.Start();
-
-                    // Read the output and error streams
-                    result = process.StandardOutput.ReadToEnd();
-                    _logger.LogInformation($"[RESULT]: {result}");
-                    if (string.IsNullOrEmpty(result))
-                    {
-                        string error = process.StandardError.ReadToEnd();
-                        Console.WriteLine("Error:\n" + error);
-                        throw new Exception(error);
-                    }
-
-                    // Wait for the process to exit
-                    process.WaitForExit();
-
-                    _logger.LogInformation($"[INFO]: Command execution completed");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"[ERROR]: {ex.Message}");
-            }
-
-            _logger.LogInformation($"[RESULT] Final: {result}");
-            return await Task.FromResult(result);
+            var result = await CommonService.RunAllCommandService(kubectlModel);
+            return result;
         }
     }
 }

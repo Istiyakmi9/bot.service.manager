@@ -79,12 +79,32 @@ namespace bot.service.manager.Service
 
         public async Task<string> RunFileService(FileDetail fileDetail)
         {
-            return await Task.FromResult("Successfull");
+            if (string.IsNullOrEmpty(fileDetail.FullPath))
+                throw new Exception("Invalid file path");
+
+            KubectlModel kubectlModel = new KubectlModel
+            {
+                IsMicroK8 = true,
+                IsWindow = false,
+                Command = $"apply -f {fileDetail.FullPath}"
+            };
+            var result = await CommonService.RunAllCommandService(kubectlModel);
+            return result;
         }
 
         public async Task<string> StopFileService(FileDetail fileDetail)
         {
-            return await Task.FromResult("Successfull");
+            if (string.IsNullOrEmpty(fileDetail.FullPath))
+                throw new Exception("Invalid file path");
+
+            KubectlModel kubectlModel = new KubectlModel
+            {
+                IsMicroK8 = true,
+                IsWindow = false,
+                Command = $"delete -f {fileDetail.FullPath}"
+            };
+            var result = await CommonService.RunAllCommandService(kubectlModel);
+            return result;
         }
     }
 }
