@@ -53,10 +53,15 @@ namespace bot.service.manager.Service
                     else
                         fileName = filePath.Split(@"/").Last();
 
+                    string serviceName = fileName.Split(".").First() + "-service";
+                    string podName = fileName.Split(".").First() + "-pod";
+
                     files.Add(new FileDetail
                     {
                         FullPath = filePath,
-                        FileName = fileName
+                        FileName = fileName,
+                        ServiceStatus = !string.IsNullOrEmpty(await GetServiceName(serviceName)) ? true : false,
+                        PodStatus = !string.IsNullOrEmpty(await GetPodName(podName)) ? true : false,
                     });
                 }
             }
@@ -93,6 +98,32 @@ namespace bot.service.manager.Service
                 }
             }
             return await Task.FromResult(folderDiscovery);
+        }
+
+        private async Task<string> GetServiceName(string serviceName)
+        {
+            string optional = " | awk '{print $1}'";
+            KubectlModel kubectlModel = new KubectlModel
+            {
+                Command = $"get service {serviceName} {optional}",
+                IsMicroK8 = true,
+                IsWindow = false
+            };
+            var result = await _commonService.RunAllCommandService(kubectlModel);
+            return result;
+        }
+
+        private async Task<string> GetPodName(string podName)
+        {
+            string optional = " | awk '{print $1}'";
+            KubectlModel kubectlModel = new KubectlModel
+            {
+                Command = $"get pod | grep {podName} {optional}",
+                IsMicroK8 = true,
+                IsWindow = false
+            };
+            var result = await _commonService.RunAllCommandService(kubectlModel);
+            return result;
         }
 
         public async Task<string> RunCommandService(KubectlModel kubectlModel)
