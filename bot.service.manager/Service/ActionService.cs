@@ -15,18 +15,17 @@ namespace bot.service.manager.Service
             _commonService = commonService;
         }
 
-        public async Task<string> CheckStatusService(KubectlModel kubectlModel)
+        public async Task<FileDetail> CheckStatusService(KubectlModel kubectlModel)
         {
-            string result = await _commonService.FindServiceStatus("api-databuilder-service");
-            return result;
+            return await _commonService.FindServiceStatus("api-databuilder-service");
         }
 
-        public async Task<string> ReRunFileService(FileDetail fileDetail)
+        public async Task<FileDetail> ReRunFileService(FileDetail fileDetail)
         {
-            return await Task.FromResult("Successfull");
+            return await Task.FromResult(new FileDetail());
         }
 
-        public async Task<string> RunFileService(FileDetail fileDetail)
+        public async Task<FileDetail> RunFileService(FileDetail fileDetail)
         {
             if (string.IsNullOrEmpty(fileDetail.FullPath))
                 throw new Exception("Invalid file path");
@@ -37,11 +36,29 @@ namespace bot.service.manager.Service
                 IsWindow = false,
                 Command = $"apply -f {fileDetail.FullPath}"
             };
-            var result = await _commonService.RunAllCommandService(kubectlModel);
-            return result;
+
+            await Task.Delay(1000);
+
+            string result = ""; //await _commonService.RunAllCommandService(kubectlModel);
+            if (fileDetail.PVSize == "3")
+            {
+                result = "Created";
+            }
+            
+            fileDetail.Status = false;
+            if(!string.IsNullOrEmpty(result) && result.ToLower().Contains("created"))
+            {
+                fileDetail.Status = true;
+            }
+            else
+            {
+                throw new Exception(result);
+            }
+
+            return fileDetail;
         }
 
-        public async Task<string> StopFileService(FileDetail fileDetail)
+        public async Task<FileDetail> StopFileService(FileDetail fileDetail)
         {
             if (string.IsNullOrEmpty(fileDetail.FullPath))
                 throw new Exception("Invalid file path");
@@ -52,8 +69,16 @@ namespace bot.service.manager.Service
                 IsWindow = false,
                 Command = $"delete -f {fileDetail.FullPath}"
             };
+
             var result = await _commonService.RunAllCommandService(kubectlModel);
-            return result;
+
+            fileDetail.Status = true;
+            if (!string.IsNullOrEmpty(result) && result.ToLower().Contains("deleted"))
+            {
+                fileDetail.Status = false;
+            }
+
+            return fileDetail;
         }
 
         public async Task<string> GetAllRunningService()
@@ -68,5 +93,13 @@ namespace bot.service.manager.Service
             var result = await _commonService.RunAllCommandService(kubectlModel);
             return await Task.FromResult(status);
         }
+    }
+
+    public enum FileType
+    {
+        DEPLOY,
+        SERVICE,
+        PV,
+        PVC
     }
 }

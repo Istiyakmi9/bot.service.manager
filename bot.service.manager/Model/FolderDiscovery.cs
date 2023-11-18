@@ -13,8 +13,9 @@
     {
         public string FullPath { get; set; }
         public string FileName { get; set; }
-        public bool PodStatus { get; set; }
-        public bool ServiceStatus { get; set; }
+        public bool Status { get; set; }
+        public string? FileType { set; get; }
+        public string? PVSize { set; get; }
     }
 
     public class FolderDetail

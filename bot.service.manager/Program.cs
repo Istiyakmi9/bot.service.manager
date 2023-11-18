@@ -1,5 +1,6 @@
 using bot.service.manager.IService;
 using bot.service.manager.Service;
+using Bot.Service.Manager.MiddlewareServices;
 using Newtonsoft.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,6 +50,7 @@ if (app.Environment.IsDevelopment())
 }
 app.UseCors();
 app.UseAuthorization();
+app.UseMiddleware<ExceptionHandlerMiddleware>();
 
 app.MapControllers();
 

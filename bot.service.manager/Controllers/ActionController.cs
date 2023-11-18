@@ -42,5 +42,16 @@ namespace bot.service.manager.Controllers
             var result = await _actionService.CheckStatusService(kubectlModel);
             return ApiResponse.BuildResponse(result);
         }
+
+        [HttpGet("DelayResult/{Counter}")]
+        public async Task<ApiResponse> DelayResult(int Counter)
+        {
+            await Task.Delay(1000);
+            if (Counter == 2)
+            {
+                return ApiResponse.BuildResponse("working");
+            }
+            return ApiResponse.BadRequest($"Fail {Counter} time");
+        }
     }
 }

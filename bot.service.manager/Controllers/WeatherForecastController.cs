@@ -1,3 +1,4 @@
+using bot.service.manager.IService;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Core.Pipeline.Controllers
@@ -6,21 +7,26 @@ namespace Core.Pipeline.Controllers
     [Route("api/[controller]")]
     public class WeatherForecastController : ControllerBase
     {
-        private static readonly string[] Summaries = new[]
-        {
-        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-    };
-
+        private readonly IFolderDiscoveryService _folderDiscoveryService;
         private readonly ILogger<WeatherForecastController> _logger;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        public WeatherForecastController(IFolderDiscoveryService folderDiscoveryService, ILogger<WeatherForecastController> logger)
         {
+            _folderDiscoveryService = folderDiscoveryService;
             _logger = logger;
         }
+
+        private static readonly string[] Summaries = new[]
+        {
+            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+        };
+
 
         [HttpGet(Name = "GetWeatherForecast")]
         public IEnumerable<WeatherForecast> Get()
         {
+            // _folderDiscoveryService.GetAllFileService(@"D:\\ws\\testing");
+
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {
                 Date = DateTime.Now.AddDays(index),

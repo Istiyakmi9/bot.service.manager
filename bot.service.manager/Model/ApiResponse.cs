@@ -11,11 +11,23 @@ namespace bot.service.manager.Model
         {
 
         }
+
         public static ApiResponse BuildResponse(dynamic data, HttpStatusCode httpStatusCode = HttpStatusCode.OK, string message = null)
         {
             ApiResponse apiResponse = new ApiResponse
             {
                 HttpStatusCode = httpStatusCode,
+                ResponseBody = data,
+                HttpStatusMessage = message
+            };
+            return apiResponse;
+        }
+
+        public static ApiResponse BadRequest(dynamic data, string message = null)
+        {
+            ApiResponse apiResponse = new ApiResponse
+            {
+                HttpStatusCode = HttpStatusCode.BadRequest,
                 ResponseBody = data,
                 HttpStatusMessage = message
             };

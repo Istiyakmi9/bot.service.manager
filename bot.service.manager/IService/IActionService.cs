@@ -4,9 +4,9 @@ namespace bot.service.manager.IService
 {
     public interface IActionService
     {
-        Task<string> RunFileService(FileDetail fileDetail);
-        Task<string> ReRunFileService(FileDetail fileDetail);
-        Task<string> StopFileService(FileDetail fileDetail);
-        Task<string> CheckStatusService(KubectlModel kubectlModel);
+        Task<FileDetail> RunFileService(FileDetail fileDetail);
+        Task<FileDetail> ReRunFileService(FileDetail fileDetail);
+        Task<FileDetail> StopFileService(FileDetail fileDetail);
+        Task<FileDetail> CheckStatusService(KubectlModel kubectlModel);
     }
 }

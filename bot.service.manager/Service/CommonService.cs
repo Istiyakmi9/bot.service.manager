@@ -82,7 +82,7 @@ namespace bot.service.manager.Service
             return await Task.FromResult(result);
         }
 
-        public async Task<string> FindServiceStatus(string serviceName, string nameSpaces = "default")
+        public async Task<FileDetail> FindServiceStatus(string serviceName, string nameSpaces = "default")
         {
             string options = "'{.status.loadBalancer.ingress[0].ip}{.spec.clusterIP}'";
             KubectlModel kubectlModel = new KubectlModel
@@ -91,8 +91,8 @@ namespace bot.service.manager.Service
                 IsMicroK8 = true,
             };
 
-            string status = await RunAllCommandService(kubectlModel);
-            return status;
+            var status = await RunAllCommandService(kubectlModel);
+            return new FileDetail { Status = string.IsNullOrEmpty(status) ? false : true };
         }
     }
 }

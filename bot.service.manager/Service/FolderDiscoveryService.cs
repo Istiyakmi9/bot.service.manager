@@ -14,6 +14,7 @@ namespace bot.service.manager.Service
 
         public async Task<FolderDiscovery> GetFolderDetailService(string targetDirectory)
         {
+            targetDirectory = @"D:\ws\testing";
             if (string.IsNullOrEmpty(targetDirectory))
                 targetDirectory = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "k8-workspace"));
 
@@ -42,6 +43,7 @@ namespace bot.service.manager.Service
             var files = new List<FileDetail>();
             string[] fileEntries = Directory.GetFiles(targetDirectory);
 
+            string serviceName = string.Empty;
             foreach (string filePath in fileEntries)
             {
                 string extension = Path.GetExtension(filePath);
@@ -53,20 +55,66 @@ namespace bot.service.manager.Service
                     else
                         fileName = filePath.Split(@"/").Last();
 
-                    string serviceName = fileName.Split(".").First() + "-service";
-                    string podName = fileName.Split(".").First() + "-pod";
+                    var type = GetFileType(fileName);
+                    type = type.ToUpper();
 
-                    files.Add(new FileDetail
+                    switch (type)
                     {
-                        FullPath = filePath,
-                        FileName = fileName,
-                        ServiceStatus = !string.IsNullOrEmpty(await GetServiceName(serviceName)) ? true : false,
-                        PodStatus = !string.IsNullOrEmpty(await GetPodName(podName)) ? true : false,
-                    });
+                        case nameof(FileType.DEPLOY):
+                            serviceName = fileName.Split(".").First() + "-pod";
+                            files.Add(new FileDetail
+                            {
+                                FullPath = filePath,
+                                FileName = fileName,
+                                Status = true, // !string.IsNullOrEmpty(await GetPodName(serviceName)) ? true : false,
+                                FileType = type
+                            });
+                            break;
+                        case nameof(FileType.SERVICE):
+                            serviceName = fileName.Split(".").First() + "-service";
+                            files.Add(new FileDetail
+                            {
+                                FullPath = filePath,
+                                FileName = fileName,
+                                Status = !string.IsNullOrEmpty(await GetServiceName(serviceName)) ? true : false,
+                                FileType = type
+                            });
+                            break;
+                        case nameof(FileType.PV):
+                            serviceName = fileName.Split(".").First() + "-pv";
+                            files.Add(new FileDetail
+                            {
+                                FullPath = filePath,
+                                FileName = fileName,
+                                Status = !string.IsNullOrEmpty(await GetPersistanceVolumeStatus(serviceName)) ? true : false,
+                                FileType = type,
+                                PVSize = await GetPersistanceVolumeSize(serviceName),
+                            });
+                            break;
+                        case nameof(FileType.PVC):
+                            serviceName = fileName.Split(".").First() + "-pvc";
+                            files.Add(new FileDetail
+                            {
+                                FullPath = filePath,
+                                FileName = fileName,
+                                Status = !string.IsNullOrEmpty(await GetPersistanceVolumeClaimStatus(serviceName)) ? true : false,
+                                FileType = type
+                            });
+                            break;
+                    }
                 }
             }
 
             return await Task.FromResult(files);
+        }
+
+        private string GetFileType(string fileName)
+        {
+            var file = fileName.Substring(0, fileName.IndexOf("."));
+            var splittedFileNamePart = file.Split('-');
+            int len = splittedFileNamePart.Length;
+
+            return splittedFileNamePart[len - 1];
         }
 
         private async Task<FolderDiscovery> GetAllDirectory(string targetDirectory)
@@ -106,6 +154,45 @@ namespace bot.service.manager.Service
             KubectlModel kubectlModel = new KubectlModel
             {
                 Command = $"get service {serviceName} {optional}",
+                IsMicroK8 = true,
+                IsWindow = false
+            };
+            var result = await _commonService.RunAllCommandService(kubectlModel);
+            return result;
+        }
+
+        private async Task<string> GetPersistanceVolumeSize(string serviceName)
+        {
+            string optional = " | awk '{print $3}'";
+            KubectlModel kubectlModel = new KubectlModel
+            {
+                Command = $"get pv {serviceName} {optional}",
+                IsMicroK8 = true,
+                IsWindow = false
+            };
+            var result = await _commonService.RunAllCommandService(kubectlModel);
+            return result;
+        }
+
+        private async Task<string> GetPersistanceVolumeStatus(string serviceName)
+        {
+            string optional = " | awk '{print $1}'";
+            KubectlModel kubectlModel = new KubectlModel
+            {
+                Command = $"get pv {serviceName} {optional}",
+                IsMicroK8 = true,
+                IsWindow = false
+            };
+            var result = await _commonService.RunAllCommandService(kubectlModel);
+            return result;
+        }
+
+        private async Task<string> GetPersistanceVolumeClaimStatus(string serviceName)
+        {
+            string optional = " | awk '{print $1}'";
+            KubectlModel kubectlModel = new KubectlModel
+            {
+                Command = $"get pvc {serviceName} {optional}",
                 IsMicroK8 = true,
                 IsWindow = false
             };
