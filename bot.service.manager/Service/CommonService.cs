@@ -5,15 +5,18 @@ namespace bot.service.manager.Service
 {
     public class CommonService
     {
-        public static async Task<string> RunAllCommandService(KubectlModel kubectlModel)
+        private readonly ILogger<CommonService> _logger;
+
+        public CommonService(ILogger<CommonService> logger)
+        {
+            _logger = logger;
+        }
+
+        public async Task<string> RunAllCommandService(KubectlModel kubectlModel)
         {
             string result = string.Empty;
             string cmdPrefix = string.Empty;
             string arguments = kubectlModel.Command;
-            var loggerFactory = new LoggerFactory();
-
-            // Create an ILogger instance
-            var logger = loggerFactory.CreateLogger<CommonService>();
 
             if (kubectlModel.IsMicroK8)
             {
@@ -32,7 +35,7 @@ namespace bot.service.manager.Service
                 }
             }
 
-            logger.LogInformation($"[CMD]: {kubectlModel.Command}");
+            _logger.LogInformation($"[CMD]: {kubectlModel.Command}");
             try
             {
                 // Create a new process start info
@@ -51,12 +54,12 @@ namespace bot.service.manager.Service
                 using (Process process = new Process { StartInfo = psi })
                 {
                     // Start the process
-                    logger.LogInformation($"[INFO]: Starting command execution");
+                    _logger.LogInformation($"[INFO]: Starting command execution");
                     process.Start();
 
                     // Read the output and error streams
                     result = process.StandardOutput.ReadToEnd();
-                    logger.LogInformation($"[RESULT]: {result}");
+                    _logger.LogInformation($"[RESULT]: {result}");
                     if (string.IsNullOrEmpty(result))
                     {
                         string error = process.StandardError.ReadToEnd();
@@ -67,16 +70,29 @@ namespace bot.service.manager.Service
                     // Wait for the process to exit
                     process.WaitForExit();
 
-                    logger.LogInformation($"[INFO]: Command execution completed");
+                    _logger.LogInformation($"[INFO]: Command execution completed");
                 }
             }
             catch (Exception ex)
             {
-                logger.LogError($"[ERROR]: {ex.Message}");
+                _logger.LogError($"[ERROR]: {ex.Message}");
             }
 
-            logger.LogInformation($"[RESULT] Final: {result}");
+            _logger.LogInformation($"[RESULT] Final: {result}");
             return await Task.FromResult(result);
+        }
+
+        public async Task<string> FindServiceStatus(string serviceName, string nameSpaces = "default")
+        {
+            string options = "'{.status.loadBalancer.ingress[0].ip}{.spec.clusterIP}'";
+            KubectlModel kubectlModel = new KubectlModel
+            {
+                Command = $"get service {serviceName} -n {nameSpaces} -o jsonpath={options}",
+                IsMicroK8 = true,
+            };
+
+            string status = await RunAllCommandService(kubectlModel);
+            return status;
         }
     }
 }

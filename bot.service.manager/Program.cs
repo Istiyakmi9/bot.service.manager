@@ -24,8 +24,12 @@ builder.Services.AddCors(options =>
         .AllowAnyMethod();
     });
 });
+
 builder.Services.AddScoped<IFolderDiscoveryService, FolderDiscoveryService>();
 builder.Services.AddScoped<IActionService, ActionService>();
+builder.Services.AddSingleton<CommonService>();
+
+
 var targetDirectory = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "k8-workspace"));
 
 if (!Directory.Exists(targetDirectory))

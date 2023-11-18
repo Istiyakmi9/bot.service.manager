@@ -7,70 +7,20 @@ namespace bot.service.manager.Service
     public class ActionService : IActionService
     {
         ILogger<ActionService> _logger;
+        private readonly CommonService _commonService;
 
-        public ActionService(ILogger<ActionService> logger)
+        public ActionService(ILogger<ActionService> logger, CommonService commonService)
         {
             _logger = logger;
+            _commonService = commonService;
         }
 
         public async Task<string> CheckStatusService(KubectlModel kubectlModel)
         {
-            string result = RunMicrok8sKubectlCommand(kubectlModel);
-            return await Task.FromResult(result);
-        }
-
-
-        private string RunMicrok8sKubectlCommand(KubectlModel kubectlModel)
-        {
-            string arguments = string.Empty;
-
-            // Set the path to microk8s kubectl executable
-            string microk8sKubectlPath = "/snap/bin/microk8s.kubectl"; // Adjust the path based on your setup
-
-            kubectlModel.Command = "microk8s.kubectl get pods all --all-namespaces";
-
-            _logger.LogInformation($"[CMD]: {kubectlModel.Command}");
-
-            string result = string.Empty;
-
-            try
-            {
-                // Create process start info
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = microk8sKubectlPath,
-                    Arguments = kubectlModel.Command,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-
-                _logger.LogInformation($"[INFO]: {kubectlModel.Command}");
-                // Start the process
-                using (Process process = new Process { StartInfo = startInfo })
-                {
-                    _logger.LogInformation($"[INFO]: Starting command execution");
-                    process.Start();
-
-                    // Capture the standard output
-                    result = process.StandardOutput.ReadToEnd();
-                    _logger.LogInformation($"[RESULT]: {result}");
-
-                    // Wait for the process to exit
-                    process.WaitForExit();
-
-                    _logger.LogInformation($"[INFO]: Command execution completed");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"[ERROR]: {ex.Message}");
-            }
-
-            _logger.LogInformation($"[RESULT] Final: {result}");
+            string result = await _commonService.FindServiceStatus("api-databuilder-service");
             return result;
         }
+
 
         public async Task<string> ReRunFileService(FileDetail fileDetail)
         {
@@ -88,7 +38,7 @@ namespace bot.service.manager.Service
                 IsWindow = false,
                 Command = $"apply -f {fileDetail.FullPath}"
             };
-            var result = await CommonService.RunAllCommandService(kubectlModel);
+            var result = await _commonService.RunAllCommandService(kubectlModel);
             return result;
         }
 
@@ -103,7 +53,7 @@ namespace bot.service.manager.Service
                 IsWindow = false,
                 Command = $"delete -f {fileDetail.FullPath}"
             };
-            var result = await CommonService.RunAllCommandService(kubectlModel);
+            var result = await _commonService.RunAllCommandService(kubectlModel);
             return result;
         }
     }

@@ -5,6 +5,13 @@ namespace bot.service.manager.Service
 {
     public class FolderDiscoveryService : IFolderDiscoveryService
     {
+        private readonly CommonService _commonService;
+
+        public FolderDiscoveryService(CommonService commonService)
+        {
+            _commonService = commonService;
+        }
+
         public async Task<FolderDiscovery> GetFolderDetailService(string targetDirectory)
         {
             if (string.IsNullOrEmpty(targetDirectory))
@@ -53,7 +60,7 @@ namespace bot.service.manager.Service
 
         public async Task<string> RunCommandService(KubectlModel kubectlModel)
         {
-            var result = await CommonService.RunAllCommandService(kubectlModel);
+            var result = await _commonService.RunAllCommandService(kubectlModel);
             return result;
         }
     }
