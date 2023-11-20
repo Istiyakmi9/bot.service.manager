@@ -37,16 +37,10 @@ namespace bot.service.manager.Service
                 Command = $"apply -f {fileDetail.FullPath}"
             };
 
-            await Task.Delay(1000);
+            string result = await _commonService.RunAllCommandService(kubectlModel);
 
-            string result = ""; //await _commonService.RunAllCommandService(kubectlModel);
-            if (fileDetail.PVSize == "3")
-            {
-                result = "Created";
-            }
-            
             fileDetail.Status = false;
-            if(!string.IsNullOrEmpty(result) && result.ToLower().Contains("created"))
+            if (!string.IsNullOrEmpty(result) && result.ToLower().Contains("created"))
             {
                 fileDetail.Status = true;
             }
@@ -76,6 +70,10 @@ namespace bot.service.manager.Service
             if (!string.IsNullOrEmpty(result) && result.ToLower().Contains("deleted"))
             {
                 fileDetail.Status = false;
+            }
+            else
+            {
+                throw new Exception(result);
             }
 
             return fileDetail;

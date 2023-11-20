@@ -16,6 +16,8 @@
         public bool Status { get; set; }
         public string? FileType { set; get; }
         public string? PVSize { set; get; }
+        public PodRootModel? podRootModel { get; set; }
+        public bool IsFolder { get; set; }
     }
 
     public class FolderDetail

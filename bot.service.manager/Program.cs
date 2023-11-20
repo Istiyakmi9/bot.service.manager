@@ -28,6 +28,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddScoped<IFolderDiscoveryService, FolderDiscoveryService>();
 builder.Services.AddScoped<IActionService, ActionService>();
+builder.Services.AddScoped<PodHelper>();
 builder.Services.AddSingleton<CommonService>();
 
 
