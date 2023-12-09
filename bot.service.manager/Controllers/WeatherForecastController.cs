@@ -22,7 +22,7 @@ namespace Core.Pipeline.Controllers
         };
 
 
-        [HttpGet(Name = "GetWorkingFolder")]
+        [HttpGet("GetWorkingFolder")]
         public string GetWorkingFolder()
         {
             return Directory.GetCurrentDirectory();
