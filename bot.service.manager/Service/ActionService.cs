@@ -22,7 +22,9 @@ namespace bot.service.manager.Service
 
         public async Task<FileDetail> ReRunFileService(FileDetail fileDetail)
         {
-            return await Task.FromResult(new FileDetail());
+            var result = await StopFileService(fileDetail);
+            await RunFileService(fileDetail);
+            return result;
         }
 
         public async Task<FileDetail> RunFileService(FileDetail fileDetail)
