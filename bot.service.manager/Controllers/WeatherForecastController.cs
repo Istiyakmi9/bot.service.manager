@@ -22,6 +22,12 @@ namespace Core.Pipeline.Controllers
         };
 
 
+        [HttpGet(Name = "GetWorkingFolder")]
+        public string GetWorkingFolder()
+        {
+            return Directory.GetCurrentDirectory();
+        }
+
         [HttpGet(Name = "GetWeatherForecast")]
         public IEnumerable<WeatherForecast> Get()
         {
