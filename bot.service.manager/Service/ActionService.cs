@@ -97,9 +97,14 @@ namespace bot.service.manager.Service
 
     public enum FileType
     {
-        DEPLOY,
+        DEPLOYMENT,
         SERVICE,
-        PV,
-        PVC
+        PERSISTENTVOLUME,
+        PERSISTENTVOLUMECLAIM,
+        CONFIGMAP,
+        INGRESS,
+        CLUSTERISSUER,
+        STATEFULSET,
+        NAMESPACE
     }
 }

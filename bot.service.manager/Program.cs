@@ -30,6 +30,8 @@ builder.Services.AddScoped<IFolderDiscoveryService, FolderDiscoveryService>();
 builder.Services.AddScoped<IActionService, ActionService>();
 builder.Services.AddScoped<PodHelper>();
 builder.Services.AddSingleton<CommonService>();
+builder.Services.AddSingleton<EditorService>();
+builder.Services.AddSingleton<YamlUtilService>();
 
 
 var targetDirectory = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "k8-workspace"));
