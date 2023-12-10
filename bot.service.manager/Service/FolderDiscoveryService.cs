@@ -9,12 +9,14 @@ namespace bot.service.manager.Service
         private readonly CommonService _commonService;
         private readonly PodHelper _podHelper;
         private readonly YamlUtilService _yamlUtilService;
+        private readonly ILogger<FolderDiscoveryService> _logger;
 
-        public FolderDiscoveryService(CommonService commonService, PodHelper podHelper, YamlUtilService yamlUtilService)
+        public FolderDiscoveryService(CommonService commonService, PodHelper podHelper, YamlUtilService yamlUtilService, ILogger<FolderDiscoveryService> logger)
         {
             _commonService = commonService;
             _podHelper = podHelper;
             _yamlUtilService = yamlUtilService;
+            _logger = logger;
         }
 
         public async Task<FolderDiscovery> GetFolderDetailService(string targetDirectory)
@@ -87,14 +89,18 @@ namespace bot.service.manager.Service
                 if (extension.Equals(".yml") || extension.Equals(".yaml"))
                 {
                     string fileName = "";
+                    _logger.LogInformation("Reading file name");
                     if (filePath.Contains(@"\"))
                         fileName = filePath.Split(@"\").Last();
                     else
                         fileName = filePath.Split(@"/").Last();
 
+                    _logger.LogInformation($"File name: {fileName}");
                     YamlModel yamlModel = _yamlUtilService.ReadYamlFile(filePath);
 
                     string serviceName = yamlModel.Metadata.Name;
+                    _logger.LogInformation($"Service name: {serviceName}");
+
                     switch (yamlModel.Kind.ToUpper())
                     {
                         case nameof(FileType.DEPLOYMENT):
