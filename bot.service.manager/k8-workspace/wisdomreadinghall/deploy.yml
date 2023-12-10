@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wisdon-library
+  labels:
+    app: wisdon-library
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wisdon-library
+  template:
+    metadata:
+      labels:
+        app: wisdon-library
+    spec:
+      containers:
+        - name: wisdon-library
+          image: istiyaqmi9/library_server:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: wisdon-library-service
+spec:
+  selector:
+    app: wisdon-library
+  ports:
+    - protocol: TCP
+      port: 8192
+      targetPort: 80
+  type: LoadBalancer

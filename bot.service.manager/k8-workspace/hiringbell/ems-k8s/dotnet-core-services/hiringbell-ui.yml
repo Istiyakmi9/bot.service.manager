@@ -1,0 +1,37 @@
+# deployment for hirinb bell ui
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hiringbell-pod
+spec:
+  selector:
+    matchLabels:
+      app: hiringbell-ui
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: hiringbell-ui
+    spec:
+      containers:
+      - name: hiringbell-ui
+        image: istiyaqmi9/hiringbell-ui:latest
+        ports:
+        - containerPort: 80
+
+---
+
+# hiringbell ui service with 3 set of replica
+apiVersion: v1
+kind: Service
+metadata:
+  name: hiringbell-ui-service
+spec:
+  selector:
+    app: hiringbell-ui
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8196
+      targetPort: 80
+  type: LoadBalancer

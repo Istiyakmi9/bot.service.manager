@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: employee-project
+  labels:
+    app: employee-project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: employee-project
+  template:
+    metadata:
+      labels:
+        app: employee-project
+    spec:
+      containers:
+        - name: employee-project
+          image: istiyaqmi9/ems_projects:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8085
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: employee-project-service
+spec:
+  selector:
+    app: employee-project
+  ports:
+    - protocol: TCP
+      port: 8085
+      targetPort: 8085
+  type: NodePort

@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emailrequest
+  labels:
+    app: emailrequest
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: emailrequest
+  template:
+    metadata:
+      labels:
+        app: emailrequest
+    spec:
+      containers:
+        - name: emailrequest
+          image: istiyaqmi9/emailrequest-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - mountPath: /app/Documents
+              name: document-volume
+      volumes:
+        - name: document-volume
+          persistentVolumeClaim:
+            claimName: document-pvc
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: emailrequest-service
+spec:
+  selector:
+    app: emailrequest
+  ports:
+    - protocol: TCP
+      port: 8195
+      targetPort: 80
+  type: NodePort

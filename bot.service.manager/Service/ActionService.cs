@@ -1,6 +1,5 @@
 ﻿using bot.service.manager.IService;
 using bot.service.manager.Model;
-using System.Diagnostics;
 
 namespace bot.service.manager.Service
 {

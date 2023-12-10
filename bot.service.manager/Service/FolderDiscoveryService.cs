@@ -1,5 +1,9 @@
 ﻿using bot.service.manager.IService;
 using bot.service.manager.Model;
+using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
+using Octokit;
+using YamlDotNet.Core.Tokens;
 using static bot.service.manager.Service.PodHelper;
 
 namespace bot.service.manager.Service
@@ -10,16 +14,91 @@ namespace bot.service.manager.Service
         private readonly PodHelper _podHelper;
         private readonly YamlUtilService _yamlUtilService;
         private readonly ILogger<FolderDiscoveryService> _logger;
+        private readonly RemoteServerConfig _remoteServerConfig;
 
-        public FolderDiscoveryService(CommonService commonService, PodHelper podHelper, YamlUtilService yamlUtilService, ILogger<FolderDiscoveryService> logger)
+        public FolderDiscoveryService(CommonService commonService,
+            PodHelper podHelper,
+            YamlUtilService yamlUtilService,
+            ILogger<FolderDiscoveryService> logger,
+            IOptions<RemoteServerConfig> options)
         {
             _commonService = commonService;
             _podHelper = podHelper;
             _yamlUtilService = yamlUtilService;
             _logger = logger;
+            _remoteServerConfig = options.Value;
         }
 
-        public async Task<FolderDiscovery> GetFolderDetailService(string targetDirectory)
+        public class GitHubContent
+        {
+            [JsonProperty("name")]
+            public string Name { get; set; }
+
+            [JsonProperty("url")]
+            public string Url { get; set; }
+
+            [JsonProperty("type")]
+            public string Type { get; set; }
+        }
+
+        public async Task<FolderDiscovery> GetLinuxFolderDetail(string targetDirectory)
+        {
+            string owner = "Istiyakmi9";
+            string repo = "ems-k8s";
+            string accessToken = "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";
+
+            string apiUrl = $"https://api.github.com/repos/{owner}/{repo}/contents/local";
+            List<GitHubContent> gitHubContent = new List<GitHubContent>();
+
+            GitHubClient client = new GitHubClient(new ProductHeaderValue("GitHubApiExample"));
+            var tokenAuth = new Credentials(accessToken);
+            client.Credentials = tokenAuth;
+
+            try
+            {
+                var contents = await client.Repository.Content.GetAllContents(owner, repo, "local");
+
+                foreach (var content in contents)
+                {
+                    if (content.Type == ContentType.File)
+                    {
+                        Console.WriteLine($"File: {content.Path}");
+                    }
+                    else if (content.Type == ContentType.Dir)
+                    {
+                        Console.WriteLine($"Directory: {content.Path}");
+                        await ProcessDirectory(client, owner, repo, content.Path);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Repository not found.");
+                throw;
+            }
+
+            return null;
+        }
+
+        private async Task ProcessDirectory(GitHubClient client, string owner, string repoName, string path)
+        {
+            var contents = await client.Repository.Content.GetAllContents(owner, repoName, path);
+
+            foreach (var content in contents)
+            {
+                if (content.Type == ContentType.File)
+                {
+                    Console.WriteLine($"File: {content.Path}");
+                }
+                else if (content.Type == ContentType.Dir)
+                {
+                    Console.WriteLine($"Directory: {content.Path}");
+                    await ProcessDirectory(client, owner, repoName, content.Path);
+                }
+            }
+        }
+
+        public async Task<FolderDiscovery> GetCurrentFolderDetail(string targetDirectory)
         {
             if (string.IsNullOrEmpty(targetDirectory))
                 targetDirectory = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "k8-workspace"));
@@ -32,15 +111,35 @@ namespace bot.service.manager.Service
             return result;
         }
 
+        public async Task<FolderDiscovery> GetFolderDetailService(string targetDirectory)
+        {
+            FolderDiscovery folderDiscovery = null;
+            if (_remoteServerConfig.env == "development")
+            {
+                folderDiscovery = await GetLinuxFolderDetail(_remoteServerConfig.workingDirectory);
+            }
+
+            return folderDiscovery;
+        }
+
         public async Task<List<FileDetail>> GetAllFileService(string targetDirectory)
         {
-            if (string.IsNullOrEmpty(targetDirectory))
-                throw new Exception("Directory is invalid");
+            List<FileDetail> result = null;
+            try
+            {
+                if (string.IsNullOrEmpty(targetDirectory))
+                    throw new Exception("Directory is invalid");
 
-            if (!Directory.Exists(targetDirectory))
-                throw new Exception("Directory not found");
+                if (!Directory.Exists(targetDirectory))
+                    throw new Exception("Directory not found");
 
-            var result = await GetFilesAndFolder(targetDirectory);
+                result = await GetFilesAndFolder(targetDirectory);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+
             return result;
         }
 
@@ -136,6 +235,19 @@ namespace bot.service.manager.Service
                                 FileType = yamlModel.Kind,
                                 IsFolder = false
                             });
+                            break;
+                        case nameof(FileType.NAMESPACE):
+                            files.Add(new FileDetail
+                            {
+                                FullPath = filePath,
+                                FileName = fileName,
+                                Status = !string.IsNullOrEmpty(await GetNamespaceStatus(serviceName)) ? true : false,
+                                FileType = yamlModel.Kind,
+                                IsFolder = false
+                            });
+                            break;
+                        case nameof(FileType.STATEFULSET):
+                            files.Add(await GetPodDetail(serviceName, filePath, fileName, yamlModel.Kind));
                             break;
                     }
                 }
@@ -255,7 +367,20 @@ namespace bot.service.manager.Service
             return result;
         }
 
-        private async Task<PodRootModel?> GetPodName(string podName)
+        private async Task<string> GetNamespaceStatus(string serviceName)
+        {
+            string optional = "| awk '{print $1}'";
+            KubectlModel kubectlModel = new KubectlModel
+            {
+                Command = $"get ns {serviceName} {optional}",
+                IsMicroK8 = true,
+                IsWindow = false
+            };
+            var result = await _commonService.RunAllCommandService(kubectlModel);
+            return result;
+        }
+
+        private async Task<PodRootModel> GetPodName(string podName)
         {
             KubectlModel kubectlModel = new KubectlModel
             {
@@ -264,7 +389,7 @@ namespace bot.service.manager.Service
                 IsWindow = false
             };
 
-            return await _commonService.RunCommandToJsonService(kubectlModel);
+            return await _commonService.RunCommandForPodService(kubectlModel);
         }
 
         public async Task<string> RunCommandService(KubectlModel kubectlModel)

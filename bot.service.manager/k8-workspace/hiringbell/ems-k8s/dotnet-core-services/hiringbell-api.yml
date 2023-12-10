@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-databuilder-service
+spec:
+  selector:
+    app: api-databuilder
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 80
+  type: LoadBalancer
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-databuilder
+  labels:
+    app: api-databuilder
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api-databuilder
+  template:
+    metadata:
+      labels:
+        app: api-databuilder
+    spec:
+      containers:
+        - name: api-databuilder
+          image: istiyaqmi9/onlinedatabuilder:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - mountPath: /app/appsettings.json
+              name: appsetting-volume
+            - mountPath: /app/ExceptionFiles
+              name: exception-file-volume
+            - mountPath: /app/Documents
+              name: document-volume
+      volumes:
+        - name: appsetting-volume
+          hostPath:
+            path: /root/projects/hiringbell/Documents/appsettings.json
+        - name: exception-file-volume
+          persistentVolumeClaim:
+            claimName: exceptionfiles-pvc
+        - name: document-volume
+          persistentVolumeClaim:
+            claimName: document-pvc

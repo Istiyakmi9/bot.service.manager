@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bottomhalf-site
+  labels:
+    app: bottomhalf-site
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bottomhalf-site
+  template:
+    metadata:
+      labels:
+        app: bottomhalf-site
+    spec:
+      containers:
+        - name: bottomhalf-site
+          image: istiyaqmi9/bottomhalf-site:latest
+          imagePullPolicy: Always
+          volumeMounts:
+            - mountPath: /usr/share/nginx/html/index.html
+              name: site-index-page
+      volumes:
+        - name: site-index-page
+          hostPath:
+            path: /root/projects/bottomhalf/index.html

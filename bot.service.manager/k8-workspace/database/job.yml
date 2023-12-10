@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mysql-restore-job
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: mysql-client
+          image: mysql:8.0
+          command: ["mysql"]
+          args: ["-h", "mysql-service", "-u", "root", "-p$(MYSQL_ROOT_PASSWORD)", "<", "/scripts/init-script.sql"] # Replace your-database-name
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: password  # Set your desired root password
+          volumeMounts:
+            - name: mysql-restore-script-volume
+              mountPath: /tmp/restore.sql
+      volumes:
+        - name: mysql-restore-script-volume
+          configMap:
+            name: mysql-restore-script  # Name of the ConfigMap
+  backoffLimit: 4
+

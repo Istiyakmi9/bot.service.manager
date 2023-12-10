@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apigateway-core
+  labels:
+    app: apigateway-core
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apigateway-core
+  template:
+    metadata:
+      labels:
+        app: apigateway-core
+    spec:
+      containers:
+        - name: apigateway-core
+          image: istiyaqmi9/apigateway.core:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: apigateway-core-service
+spec:
+  selector:
+    app: apigateway-core
+  ports:
+    - protocol: TCP
+      port: 5001
+      targetPort: 80
+  type: LoadBalancer

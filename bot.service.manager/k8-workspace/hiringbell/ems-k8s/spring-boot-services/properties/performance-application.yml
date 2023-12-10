@@ -1,0 +1,75 @@
+server:
+  port: 8081
+
+service:
+  name: emloyee-performance-service
+
+spring:
+  profiles:
+    active: prod
+  application:
+    name: employee-performance-service
+
+  cloud:
+    kubernetes:
+      discovery:
+        all-namespaces: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: default
+    import: optional:configserver:http://localhost:8083
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/onlinedatabuilder
+    username: root
+    password: istiyak@mi9
+
+---
+
+spring:
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: none
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    properties:
+      javax:
+        persistence:
+          validation:
+            mode: none
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+
+
+management:
+  health:
+    circuitbreakers:
+      enabled: true
+
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+  endpoint:
+    health:
+      show-details: always
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      countryList:
+        registerHealthIndicator: true
+        eventConsumerBufferSize: 10
+        failureRateThreshold: 50
+        minimumNumberOfCalls: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 6s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        slidingWindowType: COUNT_BASED

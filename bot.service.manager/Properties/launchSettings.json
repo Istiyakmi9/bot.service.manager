@@ -10,6 +10,16 @@
       "dotnetRunMessages": true,
       "applicationUrl": "http://localhost:5002"
     },
+    "server-staging": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "api",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Staging"
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "http://localhost:5002"
+    },
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
