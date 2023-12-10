@@ -8,11 +8,13 @@ namespace bot.service.manager.Service
     {
         private readonly CommonService _commonService;
         private readonly PodHelper _podHelper;
+        private readonly YamlUtilService _yamlUtilService;
 
-        public FolderDiscoveryService(CommonService commonService, PodHelper podHelper)
+        public FolderDiscoveryService(CommonService commonService, PodHelper podHelper, YamlUtilService yamlUtilService)
         {
             _commonService = commonService;
             _podHelper = podHelper;
+            _yamlUtilService = yamlUtilService;
         }
 
         public async Task<FolderDiscovery> GetFolderDetailService(string targetDirectory)
@@ -79,7 +81,6 @@ namespace bot.service.manager.Service
             var files = new List<FileDetail>();
             string[] fileEntries = Directory.GetFiles(targetDirectory);
 
-            string serviceName = string.Empty;
             foreach (string filePath in fileEntries)
             {
                 string extension = Path.GetExtension(filePath);
@@ -91,46 +92,42 @@ namespace bot.service.manager.Service
                     else
                         fileName = filePath.Split(@"/").Last();
 
-                    var type = GetFileType(fileName);
-                    type = type.ToUpper();
+                    YamlModel yamlModel = _yamlUtilService.ReadYamlFile(filePath);
 
-                    switch (type)
+                    string serviceName = yamlModel.Metadata.Name;
+                    switch (yamlModel.Kind.ToUpper())
                     {
-                        case nameof(FileType.DEPLOY):
-                            serviceName = fileName.Split(".").First().Replace("deploy", "pod");
-                            files.Add(await GetPodDetail(serviceName, filePath, fileName, type));
+                        case nameof(FileType.DEPLOYMENT):
+                            files.Add(await GetPodDetail(serviceName, filePath, fileName, yamlModel.Kind));
                             break;
                         case nameof(FileType.SERVICE):
-                            serviceName = fileName.Split(".").First();
                             files.Add(new FileDetail
                             {
                                 FullPath = filePath,
                                 FileName = fileName,
                                 Status = !string.IsNullOrEmpty(await GetServiceName(serviceName)) ? true : false,
-                                FileType = type,
+                                FileType = yamlModel.Kind,
                                 IsFolder = false
                             });
                             break;
-                        case nameof(FileType.PV):
-                            serviceName = fileName.Split(".").First();
+                        case nameof(FileType.PERSISTENTVOLUME):
                             files.Add(new FileDetail
                             {
                                 FullPath = filePath,
                                 FileName = fileName,
                                 Status = !string.IsNullOrEmpty(await GetPersistanceVolumeStatus(serviceName)) ? true : false,
-                                FileType = type,
+                                FileType = yamlModel.Kind,
                                 PVSize = await GetPersistanceVolumeSize(serviceName),
                                 IsFolder = false
                             });
                             break;
-                        case nameof(FileType.PVC):
-                            serviceName = fileName.Split(".").First();
+                        case nameof(FileType.PERSISTENTVOLUMECLAIM):
                             files.Add(new FileDetail
                             {
                                 FullPath = filePath,
                                 FileName = fileName,
                                 Status = !string.IsNullOrEmpty(await GetPersistanceVolumeClaimStatus(serviceName)) ? true : false,
-                                FileType = type,
+                                FileType = yamlModel.Kind,
                                 IsFolder = false
                             });
                             break;
@@ -143,7 +140,7 @@ namespace bot.service.manager.Service
 
         private async Task<FileDetail> GetPodDetail(string serviceName, string filePath, string fileName, string type)
         {
-            PodRootModel? podRootModel = await GetPodName(serviceName);
+            PodRootModel podRootModel = await GetPodName(serviceName);
             ItemStatus status = ItemStatus.Unknown;
 
             if (podRootModel != null)
