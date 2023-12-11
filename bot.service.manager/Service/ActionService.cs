@@ -22,35 +22,35 @@ namespace bot.service.manager.Service
         public async Task<FileDetail> ReRunFileService(FileDetail fileDetail)
         {
             var result = await StopFileService(fileDetail);
-            await RunFileService(fileDetail);
+            await RunFileService(null);
             return result;
         }
 
-        public async Task<FileDetail> RunFileService(FileDetail fileDetail)
+        public async Task<GitHubContent> RunFileService(GitHubContent gitHubContent)
         {
-            if (string.IsNullOrEmpty(fileDetail.FullPath))
+            if (string.IsNullOrEmpty(gitHubContent.DownloadUrl))
                 throw new Exception("Invalid file path");
 
             KubectlModel kubectlModel = new KubectlModel
             {
                 IsMicroK8 = true,
                 IsWindow = false,
-                Command = $"apply -f {fileDetail.FullPath}"
+                Command = $"apply -f {gitHubContent.DownloadUrl}"
             };
 
             string result = await _commonService.RunAllCommandService(kubectlModel);
 
-            fileDetail.Status = false;
-            if (!string.IsNullOrEmpty(result) && result.ToLower().Contains("created"))
-            {
-                fileDetail.Status = true;
-            }
-            else
-            {
-                throw new Exception(result);
-            }
+            //fileDetail.Status = false;
+            //if (!string.IsNullOrEmpty(result) && result.ToLower().Contains("created"))
+            //{
+            //    fileDetail.Status = true;
+            //}
+            //else
+            //{
+            //    throw new Exception(result);
+            //}
 
-            return fileDetail;
+            return gitHubContent;
         }
 
         public async Task<FileDetail> StopFileService(FileDetail fileDetail)

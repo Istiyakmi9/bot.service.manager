@@ -1,4 +1,5 @@
 ﻿using bot.service.manager.Model;
+using Octokit;
 
 namespace bot.service.manager.Service
 {
@@ -21,23 +22,28 @@ namespace bot.service.manager.Service
             return fileDetail;
         }
 
-        public async Task<FileDetail> GetFileContentService(FileDetail fileDetail)
+        public async Task<GitHubContent> GetFileContentService(GitHubContent gitHubContent)
         {
-            try
+            var accessToken = "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";
+            using (HttpClient client = new HttpClient())
             {
-                ValidateModel(fileDetail);
+                // Add authentication headers
+                client.DefaultRequestHeaders.Add("User-Agent", "YourAppName");
+                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
 
-                // Read the entire content of the file
-                string fileContent = await File.ReadAllTextAsync(fileDetail.FullPath);
+                HttpResponseMessage response = await client.GetAsync(gitHubContent.DownloadUrl);
 
-                fileDetail.FileContent = fileContent;
+                if (response.IsSuccessStatusCode)
+                {
+                    gitHubContent.FileContent = await response.Content.ReadAsStringAsync();
+                }
+                else
+                {
+                    Console.WriteLine($"Error fetching file content: {response.StatusCode} - {response.ReasonPhrase}");
+                }
+
             }
-            catch
-            {
-                throw;
-            }
-
-            return fileDetail;
+            return gitHubContent;
         }
 
         private void ValidateModel(FileDetail fileDetail)

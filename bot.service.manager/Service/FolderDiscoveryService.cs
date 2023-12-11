@@ -33,7 +33,7 @@ namespace bot.service.manager.Service
         {
             string owner = "Istiyakmi9";
             string repo = "ems-k8s";
-            string accessToken = "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";
+            string accessToken = "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";
 
             List<GitHubContent> gitHubContent = new List<GitHubContent>();
 
@@ -47,7 +47,7 @@ namespace bot.service.manager.Service
 
                 foreach (var content in contents)
                 {
-                    // if (content.Type == ContentType.Dir)
+                    
                     gitHubContent.Add(new GitHubContent
                     {
                         Type = content.Type.StringValue,

@@ -10,6 +10,7 @@ namespace bot.service.manager.Model
         public string Type { get; set; }
         public string GitUrl { get; set; }
         public string Path { get; set; }
+        public string FileContent { get; set; }
     }
 
 

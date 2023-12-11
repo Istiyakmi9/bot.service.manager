@@ -17,9 +17,9 @@ namespace bot.service.manager.Controllers
         }
 
         [HttpPost("getfile")]
-        public async Task<FileDetail> GetFileContent([FromBody] FileDetail fileDetail)
+        public async Task<GitHubContent> GetFileContent([FromBody] GitHubContent gitHubContent)
         {
-            return await _editorService.GetFileContentService(fileDetail);
+            return await _editorService.GetFileContentService(gitHubContent);
         }
 
         [HttpPost("updatefile")]

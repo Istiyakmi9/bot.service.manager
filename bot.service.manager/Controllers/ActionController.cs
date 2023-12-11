@@ -16,9 +16,9 @@ namespace bot.service.manager.Controllers
         }
 
         [HttpPost("RunFile")]
-        public async Task<ApiResponse> RunFile([FromBody] FileDetail fileDetail)
+        public async Task<ApiResponse> RunFile([FromBody] GitHubContent gitHubContent)
         {
-            var result = await _actionService.RunFileService(fileDetail);
+            var result = await _actionService.RunFileService(gitHubContent);
             return ApiResponse.BuildResponse(result);
         }
 
