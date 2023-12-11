@@ -5,57 +5,66 @@ namespace bot.service.manager.Service
 {
     public class EditorService
     {
-        public async Task<FileDetail> UpdateFileContentService(FileDetail fileDetail)
+        private readonly YamlUtilService _yamlUtilService;
+
+        public EditorService(YamlUtilService yamlUtilService)
         {
+            _yamlUtilService = yamlUtilService;
+        }
+
+        public async Task<GitHubContent> UpdateFileContentService(GitHubContent gitHubContent)
+        {
+            string owner = "Marghubur";
+            string repo = "ems-k8s";
+            string accessToken = "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";
+
+            GitHubClient client = new GitHubClient(new ProductHeaderValue("GitHubApiExample"));
+            var tokenAuth = new Credentials(accessToken);
+            client.Credentials = tokenAuth;
             try
             {
-                ValidateModel(fileDetail);
+                if (gitHubContent == null)
+                    throw new Exception("Object is invalid");
 
-                // Read the entire content of the file
-                await File.WriteAllTextAsync(fileDetail.FullPath!, fileDetail.FileContent!);
+                if (string.IsNullOrEmpty(gitHubContent.FileContent))
+                    throw new Exception("Content is null or empty");
+
+                if (string.IsNullOrEmpty(gitHubContent.Sha))
+                    throw new Exception("SHA is null or empty");
+
+                if (string.IsNullOrEmpty(gitHubContent.Path))
+                    throw new Exception("Path is null or empty");
+
+                var updateRequest = new UpdateFileRequest("Updating file", gitHubContent.FileContent, gitHubContent.Sha)
+                {
+                    Branch = "main"
+                };
+
+                var updateFile = await client.Repository.Content.UpdateFile(owner, repo, gitHubContent.Path, updateRequest);
             }
-            catch
+            catch (Exception ex)
             {
-                throw;
+                throw new Exception(ex.Message);
             }
 
-            return fileDetail;
+            return gitHubContent;
         }
 
         public async Task<GitHubContent> GetFileContentService(GitHubContent gitHubContent)
         {
-            var accessToken = "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";
-            using (HttpClient client = new HttpClient())
-            {
-                // Add authentication headers
-                client.DefaultRequestHeaders.Add("User-Agent", "YourAppName");
-                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
-
-                HttpResponseMessage response = await client.GetAsync(gitHubContent.DownloadUrl);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    gitHubContent.FileContent = await response.Content.ReadAsStringAsync();
-                }
-                else
-                {
-                    Console.WriteLine($"Error fetching file content: {response.StatusCode} - {response.ReasonPhrase}");
-                }
-
-            }
+            ValidateGithubContentModel(gitHubContent);
+            gitHubContent.FileContent = await _yamlUtilService.ReadGithubYamlFile(gitHubContent.DownloadUrl);
             return gitHubContent;
         }
 
-        private void ValidateModel(FileDetail fileDetail)
+        private void ValidateGithubContentModel(GitHubContent gitHubContent)
         {
-            if (fileDetail == null)
+            if (gitHubContent == null)
                 throw new Exception("Invalid object requested");
 
-            if (string.IsNullOrEmpty(fileDetail.FullPath))
-                throw new Exception("Invalid file path given");
-
-            if (!File.Exists(fileDetail.FullPath))
-                throw new Exception("Requested file not exists");
+            if (string.IsNullOrEmpty(gitHubContent.DownloadUrl))
+                throw new Exception("Invalid url");
         }
+
     }
 }

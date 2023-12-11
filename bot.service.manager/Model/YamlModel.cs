@@ -17,7 +17,7 @@ namespace bot.service.manager.Model
         public YmlSpec Spec { get; set; }
     }
 
-    public class YmlSpec { }
+    public class YmlSpec {}
 
     public class YmlMetadata
     {

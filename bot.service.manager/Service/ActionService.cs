@@ -19,17 +19,20 @@ namespace bot.service.manager.Service
             return await _commonService.FindServiceStatus("api-databuilder-service");
         }
 
-        public async Task<FileDetail> ReRunFileService(FileDetail fileDetail)
+        public async Task<GitHubContent> ReRunFileService(GitHubContent gitHubContent)
         {
-            var result = await StopFileService(fileDetail);
-            await RunFileService(null);
+            if (string.IsNullOrEmpty(gitHubContent.DownloadUrl))
+                throw new Exception("Invalid url");
+
+            var result = await StopFileService(gitHubContent);
+            await RunFileService(gitHubContent);
             return result;
         }
 
         public async Task<GitHubContent> RunFileService(GitHubContent gitHubContent)
         {
             if (string.IsNullOrEmpty(gitHubContent.DownloadUrl))
-                throw new Exception("Invalid file path");
+                throw new Exception("Invalid url");
 
             KubectlModel kubectlModel = new KubectlModel
             {
@@ -40,44 +43,36 @@ namespace bot.service.manager.Service
 
             string result = await _commonService.RunAllCommandService(kubectlModel);
 
-            //fileDetail.Status = false;
-            //if (!string.IsNullOrEmpty(result) && result.ToLower().Contains("created"))
-            //{
-            //    fileDetail.Status = true;
-            //}
-            //else
-            //{
-            //    throw new Exception(result);
-            //}
+            gitHubContent.Status = false;
+            if (!string.IsNullOrEmpty(result) && result.ToLower().Contains("created"))
+                gitHubContent.Status = true;
+            else
+                throw new Exception(result);
 
             return gitHubContent;
         }
 
-        public async Task<FileDetail> StopFileService(FileDetail fileDetail)
+        public async Task<GitHubContent> StopFileService(GitHubContent gitHubContent)
         {
-            if (string.IsNullOrEmpty(fileDetail.FullPath))
-                throw new Exception("Invalid file path");
+            if (string.IsNullOrEmpty(gitHubContent.DownloadUrl))
+                throw new Exception("Invalid url");
 
             KubectlModel kubectlModel = new KubectlModel
             {
                 IsMicroK8 = true,
                 IsWindow = false,
-                Command = $"delete -f {fileDetail.FullPath}"
+                Command = $"delete -f {gitHubContent.DownloadUrl}"
             };
 
             var result = await _commonService.RunAllCommandService(kubectlModel);
 
-            fileDetail.Status = true;
+            gitHubContent.Status = true;
             if (!string.IsNullOrEmpty(result) && result.ToLower().Contains("deleted"))
-            {
-                fileDetail.Status = false;
-            }
+                gitHubContent.Status = false;
             else
-            {
                 throw new Exception(result);
-            }
 
-            return fileDetail;
+            return gitHubContent;
         }
 
         public async Task<string> GetAllRunningService()

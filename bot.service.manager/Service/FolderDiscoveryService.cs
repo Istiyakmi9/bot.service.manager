@@ -1,9 +1,7 @@
 ﻿using bot.service.manager.IService;
 using bot.service.manager.Model;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using Octokit;
-using YamlDotNet.Core.Tokens;
 using static bot.service.manager.Service.PodHelper;
 
 namespace bot.service.manager.Service
@@ -33,7 +31,7 @@ namespace bot.service.manager.Service
         {
             string owner = "Istiyakmi9";
             string repo = "ems-k8s";
-            string accessToken = "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";
+            string accessToken = "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";
 
             List<GitHubContent> gitHubContent = new List<GitHubContent>();
 
@@ -47,22 +45,25 @@ namespace bot.service.manager.Service
 
                 foreach (var content in contents)
                 {
-                    
-                    gitHubContent.Add(new GitHubContent
+                    if (content.Type == ContentType.File || content.Type == ContentType.Dir)
                     {
-                        Type = content.Type.StringValue,
-                        Name = content.Name,
-                        DownloadUrl = content.DownloadUrl,
-                        GitUrl = content.GitUrl,
-                        Url = content.Url,
-                        Path = content.Path
-                    });
+                        gitHubContent.Add(new GitHubContent
+                        {
+                            Type = content.Type.StringValue,
+                            Name = content.Name,
+                            DownloadUrl = content.DownloadUrl,
+                            GitUrl = content.GitUrl,
+                            Url = content.Url,
+                            Path = content.Path,
+                            Sha = content.Sha
+                        });
+                    }
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Repository not found.");
-                throw;
+                throw new Exception(ex.Message);
             }
 
             return gitHubContent;
@@ -115,23 +116,73 @@ namespace bot.service.manager.Service
 
         public async Task<List<GitHubContent>> GetAllFileService(string targetDirectory)
         {
-            List<GitHubContent> gitHubContent = new List<GitHubContent>();
+            List<GitHubContent> gitHubContents = new List<GitHubContent>();
             if (_remoteServerConfig.env == "development")
             {
                 if (string.IsNullOrEmpty(targetDirectory))
                 {
                     throw new Exception("Invalid location or path passed");
-                }                    
+                }
 
-                gitHubContent = await GetLinuxFolderDetail(targetDirectory);
+                gitHubContents = await GetLinuxFolderDetail(targetDirectory);
+                if (gitHubContents.Count > 0)
+                    await GetFilesStatus(gitHubContents);
             }
 
-            return gitHubContent;
+            return gitHubContents;
+        }
+
+        private async Task<List<GitHubContent>> GetFilesStatus(List<GitHubContent> gitHubContents)
+        {
+            try
+            {
+                foreach (var gitHubContent in gitHubContents)
+                {
+                    string extension = Path.GetExtension(gitHubContent.Name);
+                    if (extension.Equals(".yml") || extension.Equals(".yaml"))
+                    {
+                        _logger.LogInformation($"File name: {gitHubContent.Name}");
+                        YamlModel yamlModel = await _yamlUtilService.GetGithubYamlFile(gitHubContent.DownloadUrl);
+
+                        string serviceName = yamlModel.Metadata.Name;
+                        _logger.LogInformation($"Service name: {serviceName}");
+
+                        gitHubContent.FileType = yamlModel.Kind;
+                        switch (yamlModel.Kind.ToUpper())
+                        {
+                            case nameof(FileType.DEPLOYMENT):
+                                gitHubContent.Status = await GetPodDetail(serviceName);
+                                break;
+                            case nameof(FileType.SERVICE):
+                                gitHubContent.Status = !string.IsNullOrEmpty(await GetServiceName(serviceName)) ? true : false;
+                                break;
+                            case nameof(FileType.PERSISTENTVOLUME):
+                                gitHubContent.Status = !string.IsNullOrEmpty(await GetPersistanceVolumeStatus(serviceName)) ? true : false;
+                                break;
+                            case nameof(FileType.PERSISTENTVOLUMECLAIM):
+                                gitHubContent.Status = !string.IsNullOrEmpty(await GetPersistanceVolumeClaimStatus(serviceName)) ? true : false;
+                                break;
+                            case nameof(FileType.NAMESPACE):
+                                gitHubContent.Status = !string.IsNullOrEmpty(await GetNamespaceStatus(serviceName)) ? true : false;
+                                break;
+                            case nameof(FileType.STATEFULSET):
+                                gitHubContent.Status = await GetPodDetail(serviceName);
+                                break;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+
+            return await Task.FromResult(gitHubContents);
         }
 
         private async Task<List<FileDetail>> GetFilesAndFolder(string targetDirectory)
         {
-            List<FileDetail> result = await GetAllFilesInDirectory(targetDirectory);
+            List<FileDetail> result = null; //await GetAllFilesInDirectory(targetDirectory);
 
             // Find folders
 
@@ -163,102 +214,98 @@ namespace bot.service.manager.Service
             return result;
         }
 
-        private async Task<List<FileDetail>> GetAllFilesInDirectory(string targetDirectory)
+        //private async Task<List<FileDetail>> GetAllFilesInDirectory(string targetDirectory)
+        //{
+        //    var files = new List<FileDetail>();
+        //    string[] fileEntries = Directory.GetFiles(targetDirectory);
+
+        //    foreach (string filePath in fileEntries)
+        //    {
+        //        string extension = Path.GetExtension(filePath);
+        //        if (extension.Equals(".yml") || extension.Equals(".yaml"))
+        //        {
+        //            string fileName = "";
+        //            _logger.LogInformation("Reading file name");
+        //            if (filePath.Contains(@"\"))
+        //                fileName = filePath.Split(@"\").Last();
+        //            else
+        //                fileName = filePath.Split(@"/").Last();
+
+        //            _logger.LogInformation($"File name: {fileName}");
+        //            YamlModel yamlModel = _yamlUtilService.ReadYamlFile(filePath);
+
+        //            string serviceName = yamlModel.Metadata.Name;
+        //            _logger.LogInformation($"Service name: {serviceName}");
+
+        //            switch (yamlModel.Kind.ToUpper())
+        //            {
+        //                case nameof(FileType.DEPLOYMENT):
+        //                    files.Add(await GetPodDetail(serviceName, filePath, fileName, yamlModel.Kind));
+        //                    break;
+        //                case nameof(FileType.SERVICE):
+        //                    files.Add(new FileDetail
+        //                    {
+        //                        FullPath = filePath,
+        //                        FileName = fileName,
+        //                        Status = !string.IsNullOrEmpty(await GetServiceName(serviceName)) ? true : false,
+        //                        FileType = yamlModel.Kind,
+        //                        IsFolder = false
+        //                    });
+        //                    break;
+        //                case nameof(FileType.PERSISTENTVOLUME):
+        //                    files.Add(new FileDetail
+        //                    {
+        //                        FullPath = filePath,
+        //                        FileName = fileName,
+        //                        Status = !string.IsNullOrEmpty(await GetPersistanceVolumeStatus(serviceName)) ? true : false,
+        //                        FileType = yamlModel.Kind,
+        //                        PVSize = await GetPersistanceVolumeSize(serviceName),
+        //                        IsFolder = false
+        //                    });
+        //                    break;
+        //                case nameof(FileType.PERSISTENTVOLUMECLAIM):
+        //                    files.Add(new FileDetail
+        //                    {
+        //                        FullPath = filePath,
+        //                        FileName = fileName,
+        //                        Status = !string.IsNullOrEmpty(await GetPersistanceVolumeClaimStatus(serviceName)) ? true : false,
+        //                        FileType = yamlModel.Kind,
+        //                        IsFolder = false
+        //                    });
+        //                    break;
+        //                case nameof(FileType.NAMESPACE):
+        //                    files.Add(new FileDetail
+        //                    {
+        //                        FullPath = filePath,
+        //                        FileName = fileName,
+        //                        Status = !string.IsNullOrEmpty(await GetNamespaceStatus(serviceName)) ? true : false,
+        //                        FileType = yamlModel.Kind,
+        //                        IsFolder = false
+        //                    });
+        //                    break;
+        //                case nameof(FileType.STATEFULSET):
+        //                    files.Add(await GetPodDetail(serviceName, filePath, fileName, yamlModel.Kind));
+        //                    break;
+        //            }
+        //        }
+        //    }
+
+        //    return await Task.FromResult(files);
+        //}
+
+        private async Task<bool> GetPodDetail(string serviceName)
         {
-            var files = new List<FileDetail>();
-            string[] fileEntries = Directory.GetFiles(targetDirectory);
-
-            foreach (string filePath in fileEntries)
-            {
-                string extension = Path.GetExtension(filePath);
-                if (extension.Equals(".yml") || extension.Equals(".yaml"))
-                {
-                    string fileName = "";
-                    _logger.LogInformation("Reading file name");
-                    if (filePath.Contains(@"\"))
-                        fileName = filePath.Split(@"\").Last();
-                    else
-                        fileName = filePath.Split(@"/").Last();
-
-                    _logger.LogInformation($"File name: {fileName}");
-                    YamlModel yamlModel = _yamlUtilService.ReadYamlFile(filePath);
-
-                    string serviceName = yamlModel.Metadata.Name;
-                    _logger.LogInformation($"Service name: {serviceName}");
-
-                    switch (yamlModel.Kind.ToUpper())
-                    {
-                        case nameof(FileType.DEPLOYMENT):
-                            files.Add(await GetPodDetail(serviceName, filePath, fileName, yamlModel.Kind));
-                            break;
-                        case nameof(FileType.SERVICE):
-                            files.Add(new FileDetail
-                            {
-                                FullPath = filePath,
-                                FileName = fileName,
-                                Status = !string.IsNullOrEmpty(await GetServiceName(serviceName)) ? true : false,
-                                FileType = yamlModel.Kind,
-                                IsFolder = false
-                            });
-                            break;
-                        case nameof(FileType.PERSISTENTVOLUME):
-                            files.Add(new FileDetail
-                            {
-                                FullPath = filePath,
-                                FileName = fileName,
-                                Status = !string.IsNullOrEmpty(await GetPersistanceVolumeStatus(serviceName)) ? true : false,
-                                FileType = yamlModel.Kind,
-                                PVSize = await GetPersistanceVolumeSize(serviceName),
-                                IsFolder = false
-                            });
-                            break;
-                        case nameof(FileType.PERSISTENTVOLUMECLAIM):
-                            files.Add(new FileDetail
-                            {
-                                FullPath = filePath,
-                                FileName = fileName,
-                                Status = !string.IsNullOrEmpty(await GetPersistanceVolumeClaimStatus(serviceName)) ? true : false,
-                                FileType = yamlModel.Kind,
-                                IsFolder = false
-                            });
-                            break;
-                        case nameof(FileType.NAMESPACE):
-                            files.Add(new FileDetail
-                            {
-                                FullPath = filePath,
-                                FileName = fileName,
-                                Status = !string.IsNullOrEmpty(await GetNamespaceStatus(serviceName)) ? true : false,
-                                FileType = yamlModel.Kind,
-                                IsFolder = false
-                            });
-                            break;
-                        case nameof(FileType.STATEFULSET):
-                            files.Add(await GetPodDetail(serviceName, filePath, fileName, yamlModel.Kind));
-                            break;
-                    }
-                }
-            }
-
-            return await Task.FromResult(files);
-        }
-
-        private async Task<FileDetail> GetPodDetail(string serviceName, string filePath, string fileName, string type)
-        {
+            bool podStatus = false;
             PodRootModel podRootModel = await GetPodName(serviceName);
             ItemStatus status = ItemStatus.Unknown;
 
             if (podRootModel != null)
-            {
-                status = _podHelper.FindPodStatus(podRootModel!, serviceName.Replace(".yml", "").Replace(".yaml", ""));
-            }
+                status = _podHelper.FindPodStatus(podRootModel, serviceName);
 
-            return new FileDetail
-            {
-                FullPath = filePath,
-                FileName = fileName,
-                Status = ItemStatus.Running == status,
-                FileType = type
-            };
+            if (status == ItemStatus.Succeeded || status == ItemStatus.Running)
+                podStatus = true;
+
+            return podStatus;
         }
 
         private string GetFileType(string fileName)
