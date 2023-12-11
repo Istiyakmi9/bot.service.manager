@@ -7,5 +7,8 @@
         public string password { set; get; }
         public string env { set; get; }
         public string workingDirectory { set; get; }
+        public string owner { set; get; }
+        public string repo { set; get; }
+        public string accessToken { set; get; }
     }
 }

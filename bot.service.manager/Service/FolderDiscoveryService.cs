@@ -29,19 +29,28 @@ namespace bot.service.manager.Service
 
         public async Task<List<GitHubContent>> GetLinuxFolderDetail(string targetDirectory)
         {
-            string owner = "Istiyakmi9";
-            string repo = "ems-k8s";
-            string accessToken = "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";
+            if (string.IsNullOrEmpty(_remoteServerConfig.owner))
+                throw new Exception("Invalid github user owner detail");
+
+            if (string.IsNullOrEmpty(_remoteServerConfig.repo))
+                throw new Exception("Invalid github location");
+
+            if (string.IsNullOrEmpty(_remoteServerConfig.accessToken))
+                throw new Exception("Invalid github access token");
 
             List<GitHubContent> gitHubContent = new List<GitHubContent>();
 
             GitHubClient client = new GitHubClient(new ProductHeaderValue("GitHubApiExample"));
-            var tokenAuth = new Credentials(accessToken);
+            var tokenAuth = new Credentials(_remoteServerConfig.accessToken);
             client.Credentials = tokenAuth;
 
             try
             {
-                IReadOnlyList<RepositoryContent> contents = await client.Repository.Content.GetAllContents(owner, repo, targetDirectory);
+                IReadOnlyList<RepositoryContent> contents = await client.Repository.Content.GetAllContents(
+                    _remoteServerConfig.owner, 
+                    _remoteServerConfig.repo, 
+                    targetDirectory
+                );
 
                 foreach (var content in contents)
                 {
