@@ -1,7 +1,6 @@
 ﻿using bot.service.manager.Model;
 using bot.service.manager.Model.KubeService;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using Renci.SshNet;
 using System.Diagnostics;
 
@@ -125,10 +124,10 @@ namespace bot.service.manager.Service
             switch (_remoteServerConfig.env)
             {
                 case "development":
-                    result = await ExecutedCommandInWindows(kubectlModel);
+                    result = await ExecutedCommandInLinux(kubectlModel);
                     break;
                 case "staging":
-                    result = await ExecutedCommandInLinux(kubectlModel);
+                    result = await ExecutedCommandInWindows(kubectlModel);
                     break;
             }
 

@@ -11,6 +11,9 @@ namespace bot.service.manager.Model
         public string GitUrl { get; set; }
         public string Path { get; set; }
         public string FileContent { get; set; }
+        public bool Status { get; set; }
+        public string FileType { set; get; }
+        public string Sha { get; set; }
     }
 
 

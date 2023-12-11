@@ -23,16 +23,16 @@ namespace bot.service.manager.Controllers
         }
 
         [HttpPost("ReRunFile")]
-        public async Task<ApiResponse> ReRunFile([FromBody] FileDetail fileDetail)
+        public async Task<ApiResponse> ReRunFile([FromBody] GitHubContent gitHubContent)
         {
-            var result = await _actionService.ReRunFileService(fileDetail);
+            var result = await _actionService.ReRunFileService(gitHubContent);
             return ApiResponse.BuildResponse(result);
         }
 
         [HttpPost("StopFile")]
-        public async Task<ApiResponse> StopFile([FromBody] FileDetail fileDetail)
+        public async Task<ApiResponse> StopFile([FromBody] GitHubContent gitHubContent)
         {
-            var result = await _actionService.StopFileService(fileDetail);
+            var result = await _actionService.StopFileService(gitHubContent);
             return ApiResponse.BuildResponse(result);
         }
 
