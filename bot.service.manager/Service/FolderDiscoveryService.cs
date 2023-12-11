@@ -29,25 +29,12 @@ namespace bot.service.manager.Service
             _remoteServerConfig = options.Value;
         }
 
-        public class GitHubContent
-        {
-            [JsonProperty("name")]
-            public string Name { get; set; }
-
-            [JsonProperty("url")]
-            public string Url { get; set; }
-
-            [JsonProperty("type")]
-            public string Type { get; set; }
-        }
-
-        public async Task<FolderDiscovery> GetLinuxFolderDetail(string targetDirectory)
+        public async Task<List<GitHubContent>> GetLinuxFolderDetail(string targetDirectory)
         {
             string owner = "Istiyakmi9";
             string repo = "ems-k8s";
-            string accessToken = "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";
+            string accessToken = "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";
 
-            string apiUrl = $"https://api.github.com/repos/{owner}/{repo}/contents/local";
             List<GitHubContent> gitHubContent = new List<GitHubContent>();
 
             GitHubClient client = new GitHubClient(new ProductHeaderValue("GitHubApiExample"));
@@ -56,19 +43,20 @@ namespace bot.service.manager.Service
 
             try
             {
-                var contents = await client.Repository.Content.GetAllContents(owner, repo, "local");
+                IReadOnlyList<RepositoryContent> contents = await client.Repository.Content.GetAllContents(owner, repo, targetDirectory);
 
                 foreach (var content in contents)
                 {
-                    if (content.Type == ContentType.File)
+                    // if (content.Type == ContentType.Dir)
+                    gitHubContent.Add(new GitHubContent
                     {
-                        Console.WriteLine($"File: {content.Path}");
-                    }
-                    else if (content.Type == ContentType.Dir)
-                    {
-                        Console.WriteLine($"Directory: {content.Path}");
-                        await ProcessDirectory(client, owner, repo, content.Path);
-                    }
+                        Type = content.Type.StringValue,
+                        Name = content.Name,
+                        DownloadUrl = content.DownloadUrl,
+                        GitUrl = content.GitUrl,
+                        Url = content.Url,
+                        Path = content.Path
+                    });
                 }
             }
             catch (Exception ex)
@@ -77,7 +65,7 @@ namespace bot.service.manager.Service
                 throw;
             }
 
-            return null;
+            return gitHubContent;
         }
 
         private async Task ProcessDirectory(GitHubClient client, string owner, string repoName, string path)
@@ -111,36 +99,34 @@ namespace bot.service.manager.Service
             return result;
         }
 
-        public async Task<FolderDiscovery> GetFolderDetailService(string targetDirectory)
+        public async Task<List<GitHubContent>> GetFolderDetailService(string targetDirectory)
         {
-            FolderDiscovery folderDiscovery = null;
+            List<GitHubContent> gitHubContent = new List<GitHubContent>();
             if (_remoteServerConfig.env == "development")
             {
-                folderDiscovery = await GetLinuxFolderDetail(_remoteServerConfig.workingDirectory);
+                if (string.IsNullOrEmpty(targetDirectory))
+                    targetDirectory = "local";
+
+                gitHubContent = await GetLinuxFolderDetail(_remoteServerConfig.workingDirectory);
             }
 
-            return folderDiscovery;
+            return gitHubContent;
         }
 
-        public async Task<List<FileDetail>> GetAllFileService(string targetDirectory)
+        public async Task<List<GitHubContent>> GetAllFileService(string targetDirectory)
         {
-            List<FileDetail> result = null;
-            try
+            List<GitHubContent> gitHubContent = new List<GitHubContent>();
+            if (_remoteServerConfig.env == "development")
             {
                 if (string.IsNullOrEmpty(targetDirectory))
-                    throw new Exception("Directory is invalid");
+                {
+                    throw new Exception("Invalid location or path passed");
+                }                    
 
-                if (!Directory.Exists(targetDirectory))
-                    throw new Exception("Directory not found");
-
-                result = await GetFilesAndFolder(targetDirectory);
-            }
-            catch (Exception ex)
-            {
-                throw;
+                gitHubContent = await GetLinuxFolderDetail(targetDirectory);
             }
 
-            return result;
+            return gitHubContent;
         }
 
         private async Task<List<FileDetail>> GetFilesAndFolder(string targetDirectory)

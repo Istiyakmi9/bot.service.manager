@@ -16,9 +16,9 @@ namespace Core.Pipeline.Controllers
         }
 
         [HttpPost("GetAllFolder")]
-        public async Task<ApiResponse> GetAllFolder([FromBody] FolderDiscovery folderDiscovery)
+        public async Task<ApiResponse> GetAllFolder([FromBody] GitHubContent gitHubContent)
         {
-            var result = await _folderDiscoveryService.GetFolderDetailService(folderDiscovery.TargetDirectory);
+            var result = await _folderDiscoveryService.GetFolderDetailService(gitHubContent.GitUrl);
             return ApiResponse.BuildResponse(result);
         }
 

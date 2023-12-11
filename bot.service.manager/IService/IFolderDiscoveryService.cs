@@ -5,8 +5,8 @@ namespace bot.service.manager.IService
 {
     public interface IFolderDiscoveryService
     {
-        Task<FolderDiscovery> GetFolderDetailService(string targetDirectory);
+        Task<List<GitHubContent>> GetFolderDetailService(string targetDirectory);
         Task<string> RunCommandService(KubectlModel kubectlModel);
-        Task<List<FileDetail>> GetAllFileService(string targetDirectory);
+        Task<List<GitHubContent>> GetAllFileService(string targetDirectory);
     }
 }
