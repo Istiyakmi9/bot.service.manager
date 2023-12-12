@@ -7,11 +7,13 @@ namespace bot.service.manager.Service
     {
         ILogger<ActionService> _logger;
         private readonly CommonService _commonService;
+        private readonly YamlUtilService _yamlUtilService;
 
-        public ActionService(ILogger<ActionService> logger, CommonService commonService)
+        public ActionService(ILogger<ActionService> logger, CommonService commonService, YamlUtilService yamlUtilService)
         {
             _logger = logger;
             _commonService = commonService;
+            _yamlUtilService = yamlUtilService;
         }
 
         public async Task<GitHubContent> CheckStatusService(GitHubContent gitHubContent)
@@ -34,11 +36,18 @@ namespace bot.service.manager.Service
             if (string.IsNullOrEmpty(gitHubContent.DownloadUrl))
                 throw new Exception("Invalid url");
 
+            string _namespace = "default";
+            YamlModel yamlModel = await _yamlUtilService.GetGithubYamlFile(gitHubContent.DownloadUrl);
+            if (yamlModel.Metadata != null && !string.IsNullOrEmpty(yamlModel.Metadata.Namespace))
+            {
+                _namespace = yamlModel.Metadata.Namespace;
+            }
+
             KubectlModel kubectlModel = new KubectlModel
             {
                 IsMicroK8 = true,
                 IsWindow = false,
-                Command = $"apply -f {gitHubContent.DownloadUrl}"
+                Command = $"apply -f {gitHubContent.DownloadUrl} -n {_namespace}"
             };
 
             string result = await _commonService.RunAllCommandService(kubectlModel);

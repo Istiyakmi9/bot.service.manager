@@ -17,7 +17,7 @@ namespace bot.service.manager.Model
         public YmlSpec Spec { get; set; }
     }
 
-    public class YmlSpec {}
+    public class YmlSpec { }
 
     public class YmlMetadata
     {
@@ -26,6 +26,9 @@ namespace bot.service.manager.Model
 
         [YamlMember(Alias = "labels")]
         public YmlLabels Labels { get; set; }
+
+        [YamlMember(Alias = "namespace")]
+        public string Namespace { set; get; }
     }
 
     public class YmlLabels

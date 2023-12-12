@@ -29,19 +29,28 @@ namespace bot.service.manager.Service
 
         public async Task<List<GitHubContent>> GetLinuxFolderDetail(string targetDirectory)
         {
-            string owner = "Istiyakmi9";
-            string repo = "ems-k8s";
-            string accessToken = "";
+            if (string.IsNullOrEmpty(_remoteServerConfig.owner))
+                throw new Exception("Invalid github user owner detail");
+
+            if (string.IsNullOrEmpty(_remoteServerConfig.repo))
+                throw new Exception("Invalid github location");
+
+            if (string.IsNullOrEmpty(_remoteServerConfig.accessToken))
+                throw new Exception("Invalid github access token");
 
             List<GitHubContent> gitHubContent = new List<GitHubContent>();
 
             GitHubClient client = new GitHubClient(new ProductHeaderValue("GitHubApiExample"));
-            var tokenAuth = new Credentials(accessToken);
+            var tokenAuth = new Credentials(_remoteServerConfig.accessToken);
             client.Credentials = tokenAuth;
 
             try
             {
-                IReadOnlyList<RepositoryContent> contents = await client.Repository.Content.GetAllContents(owner, repo, targetDirectory);
+                IReadOnlyList<RepositoryContent> contents = await client.Repository.Content.GetAllContents(
+                    _remoteServerConfig.owner,
+                    _remoteServerConfig.repo,
+                    targetDirectory
+                );
 
                 foreach (var content in contents)
                 {
@@ -145,28 +154,35 @@ namespace bot.service.manager.Service
                         YamlModel yamlModel = await _yamlUtilService.GetGithubYamlFile(gitHubContent.DownloadUrl);
 
                         string serviceName = yamlModel.Metadata.Name;
+                        string ns = "default";
+
+                        if (!string.IsNullOrEmpty(yamlModel.Metadata.Namespace))
+                        {
+                            ns = yamlModel.Metadata.Namespace;
+                        }
+
                         _logger.LogInformation($"Service name: {serviceName}");
 
                         gitHubContent.FileType = yamlModel.Kind;
                         switch (yamlModel.Kind.ToUpper())
                         {
                             case nameof(FileType.DEPLOYMENT):
-                                gitHubContent.Status = await GetPodDetail(serviceName);
+                                gitHubContent.Status = await GetPodDetail(serviceName, ns);
                                 break;
                             case nameof(FileType.SERVICE):
-                                gitHubContent.Status = !string.IsNullOrEmpty(await GetServiceName(serviceName)) ? true : false;
+                                gitHubContent.Status = !string.IsNullOrEmpty(await GetServiceName(serviceName, ns)) ? true : false;
                                 break;
                             case nameof(FileType.PERSISTENTVOLUME):
-                                gitHubContent.Status = !string.IsNullOrEmpty(await GetPersistanceVolumeStatus(serviceName)) ? true : false;
+                                gitHubContent.Status = !string.IsNullOrEmpty(await GetPersistanceVolumeStatus(serviceName, ns)) ? true : false;
                                 break;
                             case nameof(FileType.PERSISTENTVOLUMECLAIM):
-                                gitHubContent.Status = !string.IsNullOrEmpty(await GetPersistanceVolumeClaimStatus(serviceName)) ? true : false;
+                                gitHubContent.Status = !string.IsNullOrEmpty(await GetPersistanceVolumeClaimStatus(serviceName, ns)) ? true : false;
                                 break;
                             case nameof(FileType.NAMESPACE):
                                 gitHubContent.Status = !string.IsNullOrEmpty(await GetNamespaceStatus(serviceName)) ? true : false;
                                 break;
                             case nameof(FileType.STATEFULSET):
-                                gitHubContent.Status = await GetPodDetail(serviceName);
+                                gitHubContent.Status = await GetPodDetail(serviceName, ns);
                                 break;
                         }
                     }
@@ -293,10 +309,10 @@ namespace bot.service.manager.Service
         //    return await Task.FromResult(files);
         //}
 
-        private async Task<bool> GetPodDetail(string serviceName)
+        private async Task<bool> GetPodDetail(string serviceName, string ns)
         {
             bool podStatus = false;
-            PodRootModel podRootModel = await GetPodName(serviceName);
+            PodRootModel podRootModel = await GetPodName(serviceName, ns);
             ItemStatus status = ItemStatus.Unknown;
 
             if (podRootModel != null)
@@ -348,12 +364,12 @@ namespace bot.service.manager.Service
             return await Task.FromResult(folderDiscovery);
         }
 
-        private async Task<string> GetServiceName(string serviceName)
+        private async Task<string> GetServiceName(string serviceName, string ns)
         {
             string optional = " | awk '{print $1}'";
             KubectlModel kubectlModel = new KubectlModel
             {
-                Command = $"get service {serviceName} {optional}",
+                Command = $"get service -n {ns} {serviceName} {optional}",
                 IsMicroK8 = true,
                 IsWindow = false
             };
@@ -361,7 +377,7 @@ namespace bot.service.manager.Service
             return result;
         }
 
-        private async Task<string> GetPersistanceVolumeSize(string serviceName)
+        private async Task<string> GetPersistanceVolumeSize(string serviceName, string ns)
         {
             string optional = " | awk '{print $3}'";
             KubectlModel kubectlModel = new KubectlModel
@@ -374,12 +390,12 @@ namespace bot.service.manager.Service
             return result;
         }
 
-        private async Task<string> GetPersistanceVolumeStatus(string serviceName)
+        private async Task<string> GetPersistanceVolumeStatus(string serviceName, string ns)
         {
             string optional = " | awk '{print $1}'";
             KubectlModel kubectlModel = new KubectlModel
             {
-                Command = $"get pv {serviceName} {optional}",
+                Command = $"get pv -n {ns} {serviceName} {optional}",
                 IsMicroK8 = true,
                 IsWindow = false
             };
@@ -387,12 +403,12 @@ namespace bot.service.manager.Service
             return result;
         }
 
-        private async Task<string> GetPersistanceVolumeClaimStatus(string serviceName)
+        private async Task<string> GetPersistanceVolumeClaimStatus(string serviceName, string ns)
         {
             string optional = "| awk '{print $1}'";
             KubectlModel kubectlModel = new KubectlModel
             {
-                Command = $"get pvc {serviceName} {optional}",
+                Command = $"get pvc -n {ns} {serviceName} {optional}",
                 IsMicroK8 = true,
                 IsWindow = false
             };
@@ -413,11 +429,11 @@ namespace bot.service.manager.Service
             return result;
         }
 
-        private async Task<PodRootModel> GetPodName(string podName)
+        private async Task<PodRootModel> GetPodName(string podName, string ns)
         {
             KubectlModel kubectlModel = new KubectlModel
             {
-                Command = $"get pods -o json",
+                Command = $"get pods -n {ns} -o json",
                 IsMicroK8 = true,
                 IsWindow = false
             };

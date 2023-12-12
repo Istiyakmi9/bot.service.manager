@@ -1,11 +1,20 @@
 ﻿using bot.service.manager.Model;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using YamlDotNet.RepresentationModel;
 using YamlDotNet.Serialization;
 
 namespace bot.service.manager.Service
 {
     public class YamlUtilService
     {
+        private readonly RemoteServerConfig _remoteServerConfig;
+
+        public YamlUtilService(IOptions<RemoteServerConfig> options)
+        {
+            _remoteServerConfig = options.Value;
+        }
+
         private YamlModel ReadYamlFile(string filePath)
         {
             string json = ToJson(filePath);
@@ -30,14 +39,13 @@ namespace bot.service.manager.Service
 
         public async Task<string> ReadGithubYamlFile(string downloadUrl)
         {
-            var accessToken = "";
             try
             {
                 using (HttpClient client = new HttpClient())
                 {
                     // Add authentication headers
                     client.DefaultRequestHeaders.Add("User-Agent", "YourAppName");
-                    client.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+                    client.DefaultRequestHeaders.Add("Authorization", $"Bearer {_remoteServerConfig.accessToken}");
 
                     HttpResponseMessage response = await client.GetAsync(downloadUrl);
 

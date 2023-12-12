@@ -1,4 +1,5 @@
 ﻿using bot.service.manager.Model;
+using Microsoft.Extensions.Options;
 using Octokit;
 
 namespace bot.service.manager.Service
@@ -6,20 +7,27 @@ namespace bot.service.manager.Service
     public class EditorService
     {
         private readonly YamlUtilService _yamlUtilService;
+        private readonly RemoteServerConfig _remoteServerConfig;
 
-        public EditorService(YamlUtilService yamlUtilService)
+        public EditorService(YamlUtilService yamlUtilService, IOptions<RemoteServerConfig> options)
         {
             _yamlUtilService = yamlUtilService;
+            _remoteServerConfig = options.Value;
         }
 
         public async Task<GitHubContent> UpdateFileContentService(GitHubContent gitHubContent)
         {
-            string owner = "Marghubur";
-            string repo = "ems-k8s";
-            string accessToken = "";
+            if (string.IsNullOrEmpty(_remoteServerConfig.owner))
+                throw new Exception("Invalid github user owner detail");
+
+            if (string.IsNullOrEmpty(_remoteServerConfig.repo))
+                throw new Exception("Invalid github location");
+
+            if (string.IsNullOrEmpty(_remoteServerConfig.accessToken))
+                throw new Exception("Invalid github access token");
 
             GitHubClient client = new GitHubClient(new ProductHeaderValue("GitHubApiExample"));
-            var tokenAuth = new Credentials(accessToken);
+            var tokenAuth = new Credentials(_remoteServerConfig.accessToken);
             client.Credentials = tokenAuth;
             try
             {
@@ -40,7 +48,7 @@ namespace bot.service.manager.Service
                     Branch = "main"
                 };
 
-                var updateFile = await client.Repository.Content.UpdateFile(owner, repo, gitHubContent.Path, updateRequest);
+                var updateFile = await client.Repository.Content.UpdateFile(_remoteServerConfig.owner, _remoteServerConfig.repo, gitHubContent.Path, updateRequest);
             }
             catch (Exception ex)
             {
