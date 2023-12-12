@@ -179,7 +179,7 @@ namespace bot.service.manager.Service
             return await Task.FromResult(serviceRootModel);
         }
 
-        public async Task<FileDetail> FindServiceStatus(string serviceName, string nameSpaces = "default")
+        public async Task<GitHubContent> FindServiceStatus(string serviceName, string nameSpaces = "default")
         {
             string options = "'{.status.loadBalancer.ingress[0].ip}{.spec.clusterIP}'";
             KubectlModel kubectlModel = new KubectlModel
@@ -189,7 +189,7 @@ namespace bot.service.manager.Service
             };
 
             var status = await RunAllCommandService(kubectlModel);
-            return new FileDetail { Status = string.IsNullOrEmpty(status) ? false : true };
+            return new GitHubContent { Status = string.IsNullOrEmpty(status) ? false : true };
         }
     }
 }

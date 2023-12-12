@@ -14,7 +14,7 @@ namespace bot.service.manager.Service
             _commonService = commonService;
         }
 
-        public async Task<FileDetail> CheckStatusService(KubectlModel kubectlModel)
+        public async Task<GitHubContent> CheckStatusService(GitHubContent gitHubContent)
         {
             return await _commonService.FindServiceStatus("api-databuilder-service");
         }

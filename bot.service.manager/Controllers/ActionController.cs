@@ -37,9 +37,9 @@ namespace bot.service.manager.Controllers
         }
 
         [HttpPost("CheckStatus")]
-        public async Task<ApiResponse> CheckStatus([FromBody] KubectlModel kubectlModel)
+        public async Task<ApiResponse> CheckStatus([FromBody] GitHubContent gitHubContent)
         {
-            var result = await _actionService.CheckStatusService(kubectlModel);
+            var result = await _actionService.CheckStatusService(gitHubContent);
             return ApiResponse.BuildResponse(result);
         }
 

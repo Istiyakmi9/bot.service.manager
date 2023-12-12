@@ -30,7 +30,7 @@ namespace bot.service.manager.Service
 
         public async Task<string> ReadGithubYamlFile(string downloadUrl)
         {
-            var accessToken = "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";
+            var accessToken = "";
             try
             {
                 using (HttpClient client = new HttpClient())

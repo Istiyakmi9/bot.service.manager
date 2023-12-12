@@ -31,7 +31,7 @@ namespace bot.service.manager.Service
         {
             string owner = "Istiyakmi9";
             string repo = "ems-k8s";
-            string accessToken = "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";
+            string accessToken = "";
 
             List<GitHubContent> gitHubContent = new List<GitHubContent>();
 
@@ -45,7 +45,7 @@ namespace bot.service.manager.Service
 
                 foreach (var content in contents)
                 {
-                    if (content.Type == ContentType.File || content.Type == ContentType.Dir)
+                    if ((content.Type == ContentType.File && (Path.GetExtension(content.Path).Equals(".yaml") || Path.GetExtension(content.Path).Equals(".yml"))) || content.Type == ContentType.Dir)
                     {
                         gitHubContent.Add(new GitHubContent
                         {

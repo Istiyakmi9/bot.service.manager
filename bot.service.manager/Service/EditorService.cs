@@ -16,7 +16,7 @@ namespace bot.service.manager.Service
         {
             string owner = "Marghubur";
             string repo = "ems-k8s";
-            string accessToken = "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";
+            string accessToken = "";
 
             GitHubClient client = new GitHubClient(new ProductHeaderValue("GitHubApiExample"));
             var tokenAuth = new Credentials(accessToken);
