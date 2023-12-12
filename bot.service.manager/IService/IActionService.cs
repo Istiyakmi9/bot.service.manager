@@ -7,6 +7,6 @@ namespace bot.service.manager.IService
         Task<GitHubContent> RunFileService(GitHubContent fileDetail);
         Task<GitHubContent> ReRunFileService(GitHubContent gitHubContent);
         Task<GitHubContent> StopFileService(GitHubContent gitHubContent);
-        Task<FileDetail> CheckStatusService(KubectlModel kubectlModel);
+        Task<GitHubContent> CheckStatusService(GitHubContent gitHubContent);
     }
 }

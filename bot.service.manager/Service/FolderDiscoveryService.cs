@@ -54,7 +54,7 @@ namespace bot.service.manager.Service
 
                 foreach (var content in contents)
                 {
-                    if (content.Type == ContentType.File || content.Type == ContentType.Dir)
+                    if ((content.Type == ContentType.File && (Path.GetExtension(content.Path).Equals(".yaml") || Path.GetExtension(content.Path).Equals(".yml"))) || content.Type == ContentType.Dir)
                     {
                         gitHubContent.Add(new GitHubContent
                         {
