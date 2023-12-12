@@ -35,13 +35,13 @@ namespace bot.service.manager.Service
             if (string.IsNullOrEmpty(_remoteServerConfig.repo))
                 throw new Exception("Invalid github location");
 
-            if (string.IsNullOrEmpty(_remoteServerConfig.accessToken))
+            if (string.IsNullOrEmpty($"ghp_{_remoteServerConfig.accessToken}"))
                 throw new Exception("Invalid github access token");
 
             List<GitHubContent> gitHubContent = new List<GitHubContent>();
 
             GitHubClient client = new GitHubClient(new ProductHeaderValue("GitHubApiExample"));
-            var tokenAuth = new Credentials(_remoteServerConfig.accessToken);
+            var tokenAuth = new Credentials($"ghp_{_remoteServerConfig.accessToken}");
             client.Credentials = tokenAuth;
 
             try
