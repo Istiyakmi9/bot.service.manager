@@ -44,7 +44,7 @@ namespace bot.service.manager.Service
                 {
                     // Add authentication headers
                     client.DefaultRequestHeaders.Add("User-Agent", "YourAppName");
-                    client.DefaultRequestHeaders.Add("Authorization", $"Bearer {_remoteServerConfig.accessToken}");
+                    client.DefaultRequestHeaders.Add("Authorization", $"Bearer ghp_{_remoteServerConfig.accessToken}");
 
                     HttpResponseMessage response = await client.GetAsync(downloadUrl);
 
