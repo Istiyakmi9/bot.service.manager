@@ -1,7 +1,6 @@
 ﻿using bot.service.manager.Model;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using YamlDotNet.RepresentationModel;
 using YamlDotNet.Serialization;
 
 namespace bot.service.manager.Service
