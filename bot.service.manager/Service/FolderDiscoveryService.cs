@@ -54,8 +54,12 @@ namespace bot.service.manager.Service
 
                 foreach (var content in contents)
                 {
-                    if ((content.Type == ContentType.File && (Path.GetExtension(content.Path).Equals(".yaml") || Path.GetExtension(content.Path).Equals(".yml"))) || content.Type == ContentType.Dir)
+                    if (content.Type == ContentType.File || content.Type == ContentType.Dir)
                     {
+                        bool isYmlFile = false;
+                        if (content.Type == ContentType.File && (Path.GetExtension(content.Path).Equals(".yaml") || Path.GetExtension(content.Path).Equals(".yml")))
+                            isYmlFile = true;
+
                         gitHubContent.Add(new GitHubContent
                         {
                             Type = content.Type.StringValue,
@@ -64,7 +68,8 @@ namespace bot.service.manager.Service
                             GitUrl = content.GitUrl,
                             Url = content.Url,
                             Path = content.Path,
-                            Sha = content.Sha
+                            Sha = content.Sha,
+                            IsYamlFile = isYmlFile
                         });
                     }
                 }

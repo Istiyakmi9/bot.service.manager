@@ -14,6 +14,7 @@ namespace bot.service.manager.Model
         public bool Status { get; set; }
         public string FileType { set; get; }
         public string Sha { get; set; }
+        public bool IsYamlFile { get; set; }
     }
 
 
